@@ -10,13 +10,20 @@ def main():
     if _constraints_violated():
         results = {'accu': 110, 'work': 110}
     else:
-        random_sleep()  # sleep for random time to prevent overload of atompaw runs
-        pp_success = create_paws()  # attempt to create PAW
-        if pp_success:
-            results = submit_job()  # if PP creation success, submit job to test PP
-        else:
-            results = {'accu': 100, 'work': 100}
+        results = submit job():
+        # MOVE TO SUBMIT JOB
+        # pp_success = create_paws()  # attempt to create PAW
+        # if pp_success:
+        #     results = submit_job()  # if PP creation success, submit job to test PP
+        # else:
+        #     results = {'accu': 100, 'work': 100}
     write_results_file(results)
+
+
+def read_inputs_file():
+    settings = ConfigParser.ConfigParser()
+    settings.read('opal.ini')
+    return settings
 
 
 def _constraints_violated():
@@ -27,24 +34,16 @@ def _constraints_violated():
     #    return True
     pass
 
-
-def read_inputs_file():
-    settings = ConfigParser.ConfigParser()
-    settings.read('opal.ini')
-    return settings
-
-
-def random_sleep():
-    '''sleeps a random amount of time to prevent overload of atompaw runs
-    #time is chosen to spread out n runs such that approximately p are 
-    #running at time
-    '''
-    # leave this manual for now...make it auto later
-    #gen_size = get_gen_size()
-    #nproc = get_num_procs()
-    t_max = 
+def submit_job():
+    """
+    submits job to cluster, which should run a bash script that runs a python script
+    to create the pseudopotentials then run some tests. could return either real
+    objectives, or false objectives based on a number of errors
+    """
+    pass
 
 
+# MOVE TO DIFFERENT SCRIPT
 def create_paws():
     '''run atompaw for each element and attempt to create pp'''
     pass
@@ -72,19 +71,6 @@ def clean_up():
     # compress_directory()
     # also, delete directory if constraints violated????
     pass
-
-
-def get_gen_size():
-    '''read generation size from dakota log'''
-    return 100
-
-
-def get_num_procs():
-    if len(sys.argv) == 1:
-        nproc = 8  # defualt value
-    else:
-        nproc = sys.argv[1]
-    return nproc
 
 
 if __name__=="__main__":
