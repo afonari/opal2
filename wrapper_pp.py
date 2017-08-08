@@ -10,7 +10,7 @@ def main():
     if _constraints_violated():
         results = {'accu': 110, 'work': 110}
     else:
-        results = submit job():
+        results = submit_job()
         # MOVE TO SUBMIT JOB
         # pp_success = create_paws()  # attempt to create PAW
         # if pp_success:
@@ -20,8 +20,8 @@ def main():
     write_results_file(results)
 
 
-def read_inputs_file():
-    settings = ConfigParser.ConfigParser()
+def read_input_file():
+    settings = ConfigParser.SafeConfigParser()
     settings.read('opal.ini')
     return settings
 
@@ -40,7 +40,7 @@ def submit_job():
     to create the pseudopotentials then run some tests. could return either real
     objectives, or false objectives based on a number of errors
     """
-    pass
+    return {'accu': 500, 'work': 500} # return 500s for testing
 
 
 # MOVE TO DIFFERENT SCRIPT
