@@ -31,11 +31,12 @@ class DftRun:
     """
     def __init__(self, pp_path_list, argvf_template_path,
      crystal_template_path, atom_positions, gcut):
-        self.pp_list = pp_path_list
+        self.pp_path_list = pp_path_list
         self.atom_positions = atom_positions
         self.gcut = float(gcut)
         self.argvf_template_path = argvf_template_path
         self.crystal_template_path = crystal_template_path
+        self.are_files_setup = False
    
     def setup_files(self):
         """
@@ -48,7 +49,8 @@ class DftRun:
         self._make_argvf()
         os.mkdir('data')
         self._make_crystal()
-        self._move_pseudopotentials()
+        self._symlink_pseudopotentials()
+        self.are_files_setup = True
 
     def _make_argvf(self):
         """ writes preprocessed argvf text to argvf file """
@@ -98,15 +100,14 @@ class DftRun:
         return mytext
 
 
-    def _move_pseudopotentials(self):
+    def _symlink_pseudopotentials(self):
         """ 
         moves pseudopotentials files from pp_path_list
         to data/ directory 
         """
-        with open('data/PAW.Si', 'w') as fout:
-            fout.write('asdfasdf')
-        with open('data/PAW.Ge', 'w') as fout:
-            fout.write('asdfasdf2')
+        for pp in self.pp_path_list:
+            pp_name = os.path.basename(pp)
+            os.symlink(pp, 'data/'+pp_name)
 
 def main():
     gcuts = np.arange(10.0, 110.0, 10.0)
