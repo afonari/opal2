@@ -100,7 +100,6 @@ class DftRun:
     @staticmethod
     def _preproc_crystal(mytext, atom_positions):
         atom_positions = [ map(float, r) for r in atom_positions ]
-        print atom_positions
         # remove all blank lines (shouldn't cause problems?)
         mytext = [ line for line in mytext if line.strip() ]
         # append 3 float values for each of final lines

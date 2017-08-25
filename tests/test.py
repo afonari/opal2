@@ -9,9 +9,7 @@ main_dir = os.getcwd()
 test_dir = main_dir + '/tests'
 test_inputs_dir = main_dir + '/tests/test_inputs'
 
-#################################
-# UNIT TESTS (SORT OF)
-################################
+
 def test_write_results(tmpdir):
     """ writes objectives of 100, 100 to file, checks output """
     wrapper_pp.write_results_file({'accu': 100, 'work': 101})
@@ -52,31 +50,6 @@ def test_preproc_crystal():
      ['Si', '0.5', '0.6', '0.7']]
 
 
-def test_run_socorro_no_files():
-    """
-    test: run_socorro prints warning if files not created
-    """
-    testrun = eval_pp.DftRun([], [], [], [], 0) 
-    assert testrun.run_socorro() is False
-
-
-def test_run_socorro():
-    """
-    run_socorro should return true when files set up correctly
-    
-    Ideally I could fake the file setup?
-    I should also mock a system call to socorro maybe, since currently
-    it actaully calls socorro (which aborts quickly because no input
-    files found)
-    """
-    testrun = eval_pp.DftRun([], [], [], [], 0) 
-    testrun._are_files_setup = True
-    assert testrun.run_socorro() is True
-   
-
-################################
-# integration tests
-################################
 def test_symlink_pseudopotentials():
     """
     symlinks pseudopotentials into data/ directory and compares to 
@@ -121,21 +94,53 @@ def test_setup_files():
     """
     tmp_dir = test_dir + '/tmp_setup_files'
     os.mkdir(tmp_dir)
+    correct_argvf = test_inputs_dir+'/argvf.example1'
+    correct_crystal = test_inputs_dir+'/crystal.example1'
+    correct_Si = test_inputs_dir+'/PAW.Si'
+    correct_Ge = test_inputs_dir+'/PAW.Ge'
     try:
         os.chdir(tmp_dir)
         # create object to test
+        pp_path_list = [test_inputs_dir+'/PAW.Si',
+                        test_inputs_dir+'/PAW.Ge']
         argvf_template_path = test_inputs_dir+'/argvf.template.example1'
         crystal_template_path = test_inputs_dir+'/crystal.template.example1'
-        correct_argvf = test_inputs_dir+'/argvf.example1'
-        correct_crystal = test_inputs_dir+'/crystal.example1'
         pos = [[0.0, 0, '0.1'], [0.5, 0.6, 0.7]]
-        testrun = eval_pp.DftRun([], argvf_template_path, crystal_template_path, pos, 30.)
+        testrun = eval_pp.DftRun(pp_path_list, argvf_template_path, 
+                                 crystal_template_path, pos, 30.)
         testrun.setup_files()
+        print os.system('ls data')
         # compare preprocessed files with correct file examples
         with open('argvf') as f1, open(correct_argvf) as f2:
             assert f1.read() == f2.read()
         with open('data/crystal') as f1, open(correct_crystal) as f2:
             assert map(str.split, f1.readlines()) == map(str.split, f2.readlines())
+        with open('data/PAW.Si') as f1, open(correct_Si) as f2:
+            assert f1.read() == f2.read()
+        with open('data/PAW.Ge') as f1, open(correct_Ge) as f2:
+            assert f1.read() == f2.read()
     finally:
         os.chdir(main_dir)
         shutil.rmtree(tmp_dir)
+   
+
+def test_run_socorro_no_files():
+    """
+    test: run_socorro prints warning if files not created
+    """
+    testrun = eval_pp.DftRun([], [], [], [], 0) 
+    assert testrun.run_socorro() is False
+
+
+def test_run_socorro():
+    """
+    run_socorro should return true when files set up correctly
+    
+    Ideally I could fake the file setup?
+    I should also mock a system call to socorro maybe, since currently
+    it actaully calls socorro (which aborts quickly because no input
+    files found)
+    """
+    testrun = eval_pp.DftRun([], [], [], [], 0) 
+    testrun._are_files_setup = True
+    assert testrun.run_socorro() is True
