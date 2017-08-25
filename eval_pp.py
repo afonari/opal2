@@ -37,6 +37,14 @@ class DftRun:
         self.argvf_template_path = argvf_template_path
         self.crystal_template_path = crystal_template_path
         self.are_files_setup = False
+
+    def run_socorro(self):
+        if self.are_files_setup is False:
+            # wnat exit so jobs don't keep running
+            print 'Files not setup yet. Must run setup_files() first'
+            return False
+        else:
+            return True
    
     def setup_files(self):
         """
@@ -102,8 +110,8 @@ class DftRun:
 
     def _symlink_pseudopotentials(self):
         """ 
-        moves pseudopotentials files from pp_path_list
-        to data/ directory 
+        symlinks pseudopotentials files from pp_path_list
+        to data/ directory so socorro can find them
         """
         for pp in self.pp_path_list:
             pp_name = os.path.basename(pp)

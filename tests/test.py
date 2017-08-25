@@ -58,7 +58,9 @@ def test_preproc_crystal():
 ################################
 def test_symlink_pseudopotentials():
     """
-    write later 
+    symlinks pseudopotentials into data/ directory and compares to 
+    original pseudopotential files. Obviously they'll be the same
+    but this makes sure the file operations work
     """
     tmp_dir = test_dir + '/tmp_symlink_pseudopotential'
     os.mkdir(tmp_dir)
@@ -97,9 +99,10 @@ def test_run_socorro():
 
 def test_run_socorro_no_files():
     """
-    test: run_socorro failes gracefully if files not created
+    test: run_socorro prints warning if files not created
     """
-    raise Exception('test not implemented')
+    testrun = eval_pp.DftRun([], [], [], [], 0) 
+    assert testrun.run_socorro() is False
 
 
 def test_setup_files():
