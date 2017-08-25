@@ -36,14 +36,15 @@ class DftRun:
         self.gcut = float(gcut)
         self.argvf_template_path = argvf_template_path
         self.crystal_template_path = crystal_template_path
-        self.are_files_setup = False
+        self._are_files_setup = False
 
     def run_socorro(self):
-        if self.are_files_setup is False:
+        if self._are_files_setup is False:
             # wnat exit so jobs don't keep running
             print 'Files not setup yet. Must run setup_files() first'
             return False
         else:
+            os.system('socorro')
             return True
    
     def setup_files(self):
@@ -58,7 +59,7 @@ class DftRun:
         os.mkdir('data')
         self._make_crystal()
         self._symlink_pseudopotentials()
-        self.are_files_setup = True
+        self._are_files_setup = True
 
     def _make_argvf(self):
         """ writes preprocessed argvf text to argvf file """

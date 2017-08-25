@@ -52,6 +52,27 @@ def test_preproc_crystal():
      ['Si', '0.5', '0.6', '0.7']]
 
 
+def test_run_socorro_no_files():
+    """
+    test: run_socorro prints warning if files not created
+    """
+    testrun = eval_pp.DftRun([], [], [], [], 0) 
+    assert testrun.run_socorro() is False
+
+
+def test_run_socorro():
+    """
+    run_socorro should return true when files set up correctly
+    
+    Ideally I could fake the file setup?
+    I should also mock a system call to socorro maybe, since currently
+    it actaully calls socorro (which aborts quickly because no input
+    files found)
+    """
+    testrun = eval_pp.DftRun([], [], [], [], 0) 
+    testrun._are_files_setup = True
+    assert testrun.run_socorro() is True
+   
 
 ################################
 # integration tests
@@ -88,21 +109,6 @@ def test_symlink_pseudopotentials():
     finally:
         os.chdir(main_dir)
         shutil.rmtree(tmp_dir)
-
-
-def test_run_socorro():
-    """
-    test: run_socorro calls soccoro when files setup properly
-    """
-    raise Exception('test not implemented')
-   
-
-def test_run_socorro_no_files():
-    """
-    test: run_socorro prints warning if files not created
-    """
-    testrun = eval_pp.DftRun([], [], [], [], 0) 
-    assert testrun.run_socorro() is False
 
 
 def test_setup_files():
