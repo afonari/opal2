@@ -16,18 +16,19 @@ class DftRun:
     atom_positions: some sort of list of atomic positions
     gcut: wf energy cutoff for dft calculation
 
-    attributes
-    pp_list: see inputs (pp_path_list)
+    important attributes
+    pp_path_list: see inputs (pp_path_list)
     argvf_template_path: see inputs
     crystal_template_path: see inputs
     atom_positions: see inputs
     gcut: see inputs
-    has_setup: True if setup_files() has run successfully, False otherwise
-    has_run: true if socorro has been run successfully, False otherwise
+    _are_files_setup: True if setup_files() run success, False otherwise
 
     public methods
     setup_files: sets up files for socorro dft run in current directory
      (argvf and crystal)
+    run_socorro: system calls socorro in current directory, only works
+     if _are_files_setup is True
     """
     def __init__(self, pp_path_list, argvf_template_path,
      crystal_template_path, atom_positions, gcut):

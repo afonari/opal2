@@ -109,7 +109,6 @@ def test_setup_files():
         testrun = eval_pp.DftRun(pp_path_list, argvf_template_path, 
                                  crystal_template_path, pos, 30.)
         testrun.setup_files()
-        print os.system('ls data')
         # compare preprocessed files with correct file examples
         with open('argvf') as f1, open(correct_argvf) as f2:
             assert f1.read() == f2.read()
