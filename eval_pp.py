@@ -1,7 +1,73 @@
 import numpy as np
 import os
 import sys
+import subprocess
 
+
+# these should be consistent between all optimizations
+
+def main():
+    # these are the same for different optimizations
+    main_argvf_template_path = test_inputs_dir+'/argvf.template.example1'
+    main_crystal_template_path = test_inputs_dir+'/crystal.template.example1'
+
+    # these will change for different optimizations
+    main_pp_path_list = get_pp_path_list() # read pp list from file?
+    main_positions_to_run = get_random_configurations() # read random configs from file?
+
+    # specify in opal.in?
+    gcuts = np.arange(10.0, 110.0, 10.0)
+
+    # increase gcut until converged
+    for gcut in gcuts:
+        gcut_dir_name = 'gcut_dir.' + str(int(gcut))
+        os.mkdir(gcut_dir_name)
+        os.cwd(gcut_dir_name)
+
+        position_sweep(main_pp_path_list, main_argvf_template_path, 
+                        main_crystal_template_path, main_positions_to_run, gcut)
+        os.cwd('..')
+        if is_converged():
+            calculate_final_results()
+            write_forces('converged_forces.dat')
+            write_objectives('accuracy_obj.log')
+            break
+
+
+def position_sweep(pp_path_list, argvf_template_path,
+                 crystal_template_path, atom_positions, gcut):
+    """
+    run several instances of socorro on different threads using
+    different positions
+
+    main_ variables are defined globally or in the calling function
+    """
+    # where does this get output to?? change to logger
+    print 'Calling Dakota position sweep in', 'pwd'
+    # # run socorro at each random atomic configuration
+    # for pos in main_positions_to_run:
+    #     dft_run = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
+    #                              main_crystal_template_path, pos, gcut)
+    #     dft_run.setup_files()
+    #     dft_run.run_socorro()
+
+    # start subprocess for each socorro run
+    processes = []
+    for r in positions__:
+        # create dft run object and set up files
+        dft_run = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
+                                 main_crystal_template_path, pos, gcut)
+        dft_run.setup_files()
+        # some sort of directory management
+        p = dft_run.run_socorro() # call socorro 
+        ps.append(p) # add p to process list
+    
+    # wait for each process to finish
+    for process in ps:
+        process.wait()
+
+    check_socorro_fail()
+    
 
 class DftRun:
     """
@@ -31,7 +97,7 @@ class DftRun:
      if _are_files_setup is True
     """
     def __init__(self, pp_path_list, argvf_template_path,
-     crystal_template_path, atom_positions, gcut):
+                 crystal_template_path, atom_positions, gcut):
         self.pp_path_list = pp_path_list
         self.atom_positions = atom_positions
         self.gcut = float(gcut)
@@ -40,13 +106,16 @@ class DftRun:
         self._are_files_setup = False
 
     def run_socorro(self):
+        """
+        runs socorro in a subprocess, reurns process ID, and continues
+        """
         if self._are_files_setup is False:
             # wnat exit so jobs don't keep running
             print 'Files not setup yet. Must run setup_files() first'
             return False
         else:
-            os.system('socorro')
-            return True
+            p = subprocess.Popen('socorro')
+            return p # return process id for wait later
    
     def setup_files(self):
         """
@@ -118,29 +187,8 @@ class DftRun:
             pp_name = os.path.basename(pp)
             os.symlink(pp, 'data/'+pp_name)
 
-def main():
-    gcuts = np.arange(10.0, 110.0, 10.0)
-    positions_to_run = [[],
-     [],
-     [],
-     []]
-    for gcut in gcuts:
-        gcut_dir_name = 'gcut_dir.' + str(int(gcut))
-        os.mkdir(gcut_dir_name)
-        os.cwd(gcut_dir_name)
-        position_sweep(positions_to_run)
-        os.cwd('..')
-        if is_converged():
-            calculate_final_results()
-            write_forces('converged_forces.dat')
-            write_objectives('accuracy_obj.log')
-            break
 
 
-def position_sweep(positions_to_run):
-    """
-    """
-    pass
 
 
 def setup_file_structure():
@@ -156,10 +204,8 @@ def write_energy_line():
     pass
 
 
-def position_sweep(gcut_dir):
-    print 'Calling Dakota position sweep in', 'pwd'
-    check_socorro_fail()
-
+# def position_sweep(gcut_dir):
+#     pass
 
 def check_socorro_fail():
     pass
@@ -178,4 +224,10 @@ def calculate_final_reults():
 
 
 def get_converged_forces():
+    pass
+
+def get_random_configurations():
+    pass
+
+def get_pp_path_list():
     pass
