@@ -131,6 +131,10 @@ def test_run_socorro_no_files():
     assert testrun.run_socorro() is False
 
 
+def test_position_sweep():
+    raise Exception('should I implement this test?')
+
+
 # def test_run_socorro():
 #     """
 #     run_socorro should return true when files set up correctly

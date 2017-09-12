@@ -4,8 +4,6 @@ import sys
 import subprocess
 
 
-# these should be consistent between all optimizations
-
 def main():
     # these are the same for different optimizations
     main_argvf_template_path = test_inputs_dir+'/argvf.template.example1'
@@ -27,6 +25,10 @@ def main():
         position_sweep(main_pp_path_list, main_argvf_template_path, 
                         main_crystal_template_path, main_positions_to_run, gcut)
         os.cwd('..')
+
+        # at this point, the socorro files and results are in the file structure
+        # read them in?
+        # or m
         if is_converged():
             calculate_final_results()
             write_forces('converged_forces.dat')
@@ -39,21 +41,17 @@ def position_sweep(pp_path_list, argvf_template_path,
     """
     run several instances of socorro on different threads using
     different positions
+    
+    finishes when all socorro runs are done
 
     main_ variables are defined globally or in the calling function
     """
     # where does this get output to?? change to logger
     print 'Calling Dakota position sweep in', 'pwd'
-    # # run socorro at each random atomic configuration
-    # for pos in main_positions_to_run:
-    #     dft_run = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
-    #                              main_crystal_template_path, pos, gcut)
-    #     dft_run.setup_files()
-    #     dft_run.run_socorro()
 
     # start subprocess for each socorro run
     processes = []
-    for r in positions__:
+    for r in atom_positions:
         # create dft run object and set up files
         dft_run = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
                                  main_crystal_template_path, pos, gcut)
@@ -204,8 +202,6 @@ def write_energy_line():
     pass
 
 
-# def position_sweep(gcut_dir):
-#     pass
 
 def check_socorro_fail():
     pass
