@@ -5,6 +5,10 @@ import subprocess
 
 
 def main():
+    '''
+    code within gcut loop is structured the way it is so socorro runs
+    can be run in parallel subprocesses
+    '''
     # these are the same for different optimizations
     main_argvf_template_path = test_inputs_dir+'/argvf.template.example1'
     main_crystal_template_path = test_inputs_dir+'/crystal.template.example1'
@@ -22,39 +26,56 @@ def main():
         os.mkdir(gcut_dir_name)
         os.cwd(gcut_dir_name)
 
-        position_sweep(main_pp_path_list, main_argvf_template_path, 
-                        main_crystal_template_path, main_positions_to_run, gcut)
-        os.cwd('..')
+        # creates dft run object for each position
+        # NEED SOME SORT OF DIRECTORY MANAGEMENT HERE
+        dft_runs = []
+        for pos in main_positions_to_run:
+            dft_runs.append(eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
+                                 main_crystal_template_path, pos, gcut))
+        
+        # run socorro at position in parallel
+        position_sweep(dft_runs)
 
-        # at this point, the socorro files and results are in the file structure
-        # read them in?
-        # or m
-        if is_converged():
+        # get energy and force reults from each socorro run
+        for dft_run in dft_runs:
+            if dft_run.is_successful:
+                dft_run.get_energy()
+                dft_run.get_forces()
+
+        # check if results are converged with respect to gcut
+        if is_converged(dft_runs):
             calculate_final_results()
             write_forces('converged_forces.dat')
             write_objectives('accuracy_obj.log')
             break
+    else:
+        # do stuff related to no gcut converge
+        pass
 
 
-def position_sweep(pp_path_list, argvf_template_path,
-                 crystal_template_path, atom_positions, gcut):
-    """
+#def position_sweep(pp_path_list, argvf_template_path,
+#                 crystal_template_path, atom_positions, gcut):
+def position_sweep(dft_runs):
+    '''
     run several instances of socorro on different threads using
     different positions
     
-    finishes when all socorro runs are done
+    when all socorro runs are done, returns dft_run objects
 
     main_ variables are defined globally or in the calling function
-    """
+    '''
     # where does this get output to?? change to logger
     print 'Calling Dakota position sweep in', 'pwd'
 
-    # start subprocess for each socorro run
+    # # create dft run object for each position to run
+    # dft_runs = []
+    # for r in atom_positions:
+    #     dft_runs.append(eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
+    #                              main_crystal_template_path, pos, gcut))
+
+    # for each dft run, set up files and start socorro subprocess
     processes = []
-    for r in atom_positions:
-        # create dft run object and set up files
-        dft_run = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
-                                 main_crystal_template_path, pos, gcut)
+    for dft_run in dft_runs:
         dft_run.setup_files()
         # some sort of directory management
         p = dft_run.run_socorro() # call socorro 
@@ -64,11 +85,14 @@ def position_sweep(pp_path_list, argvf_template_path,
     for process in ps:
         process.wait()
 
+
+    # WHAT HAPPENS IN EVENT OF WALL TIME LIMIT
     check_socorro_fail()
+    # cases: success, wall time limit hit, socorro no converge, socorro fail
     
 
 class DftRun:
-    """
+    '''
     class for setting up, running, and post processing soccoro dft
     calculation 
 
@@ -93,7 +117,7 @@ class DftRun:
      (argvf and crystal)
     run_socorro: system calls socorro in current directory, only works
      if _are_files_setup is True
-    """
+    '''
     def __init__(self, pp_path_list, argvf_template_path,
                  crystal_template_path, atom_positions, gcut):
         self.pp_path_list = pp_path_list
@@ -104,9 +128,9 @@ class DftRun:
         self._are_files_setup = False
 
     def run_socorro(self):
-        """
+        '''
         runs socorro in a subprocess, reurns process ID, and continues
-        """
+        '''
         if self._are_files_setup is False:
             # wnat exit so jobs don't keep running
             print 'Files not setup yet. Must run setup_files() first'
@@ -116,13 +140,13 @@ class DftRun:
             return p # return process id for wait later
    
     def setup_files(self):
-        """
+        '''
         write dft input files from templates 
 
         note this will probably fail if argvf, data/, or data/crystal
         already exist. This may be desirable behavior but if not I can
         change it.
-        """
+        '''
         self._make_argvf()
         os.mkdir('data')
         self._make_crystal()
@@ -130,7 +154,7 @@ class DftRun:
         self._are_files_setup = True
 
     def _make_argvf(self):
-        """ writes preprocessed argvf text to argvf file """
+        ''' writes preprocessed argvf text to argvf file '''
         # read in text from template file
         with open(self.argvf_template_path) as fin:
             argvf_template_text = fin.readlines()
@@ -211,7 +235,11 @@ def write_data():
     pass
 
 
-def is_converged():
+def is_converged(dft_runs):
+    '''
+    loop through dft runs and check that energy or forces or whatever
+    else is converged
+    '''
     pass
 
 
