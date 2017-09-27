@@ -41,10 +41,11 @@ def main():
             if dft_run.is_successful:
                 dft_run.get_energy()
                 dft_run.get_forces()
+        # PRINT OUT INTERMEDIATE FORCES AND ENERGIES SOMEWHERE?
 
         # check if results are converged with respect to gcut
         if is_converged(dft_runs):
-            calculate_final_results()
+            calculate_final_results(dft_runs)
             write_forces('converged_forces.dat')
             write_objectives('accuracy_obj.log')
             break
@@ -209,6 +210,20 @@ class DftRun:
             pp_name = os.path.basename(pp)
             os.symlink(pp, 'data/'+pp_name)
 
+    def read_energy(self, diaryf='diaryf'):
+        """
+        reads energy from socorro output file
+        if total energy (cell energy) found, return as float
+        otherwise, return None
+    
+        if socorro has run but didn't complete, cell energy won't be 
+        printed at the end of diaryf and this will return None
+        """
+        with open(diaryf) as fin:
+            for line in fin:
+                if 'cell energy   ' in line:
+                    return float(line.split()[3])
+            return None
 
 
 
@@ -228,6 +243,17 @@ def write_energy_line():
 
 
 def check_socorro_fail():
+    '''
+    check for non-convergence of socorro run by reading diaryf file
+
+    previous opal would return 102s as objectives
+    '''
+    #     # If socorro didn't ouptut forces or energy, it didn't complete successfully
+    # did_force=$(grep "Atomic force" diaryf)
+    # if [[ $did_force == "" ]]; then
+    #   echo fail >$2
+    #   exit
+    # fi
     pass
 
 

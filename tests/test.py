@@ -159,7 +159,7 @@ def test_get_energy():
         testrun = eval_pp.DftRun(pp_path_list, argvf_template_path,
                                  crystal_template_path, pos, gcut)
         energy_in = testrun.read_energy(test_inputs_dir+'/diaryf.test_get_energy')
-        assert is_close(energy_in, -738.821147137)
+        assert isclose(energy_in, -738.821147137)
     finally:
         os.chdir(main_dir)
         shutil.rmtree(tmp_dir)
