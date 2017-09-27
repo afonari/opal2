@@ -165,6 +165,29 @@ def test_get_energy():
         shutil.rmtree(tmp_dir)
 
 
+def test_get_energy_none():
+    """
+    should return None because no cell energy found in socorro output
+    """
+    tmp_dir = test_dir + '/tmp_get_energy_none'
+    os.mkdir(tmp_dir)
+    try:
+        os.chdir(tmp_dir)
+        # set up fake dft_run
+        pp_path_list = []
+        argvf_template_path = ''
+        crystal_template_path = '' 
+        pos = []
+        gcut = -1
+        testrun = eval_pp.DftRun(pp_path_list, argvf_template_path,
+                                 crystal_template_path, pos, gcut)
+        energy_in = testrun.read_energy(test_inputs_dir+'/diaryf.test_get_energy_none')
+        assert energy_in is None
+    finally:
+        os.chdir(main_dir)
+        shutil.rmtree(tmp_dir)
+
+
 # def test_run_socorro():
 #     '''
 #     run_socorro should return true when files set up correctly
