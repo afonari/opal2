@@ -144,7 +144,6 @@ def test_get_energy():
     """
     Read energy from example socorro ouput and check value is correct.
     Run inside temporary directory.
-    is bad?
     """
     tmp_dir = test_dir + '/tmp_get_energy'
     os.mkdir(tmp_dir)
@@ -187,6 +186,29 @@ def test_get_energy_none():
         os.chdir(main_dir)
         shutil.rmtree(tmp_dir)
 
+def test_get_forces():
+    """
+    Read forces from example socorro ouput and check value is correct.
+    Run inside temporary directory.
+    """
+    tmp_dir = test_dir + '/tmp_get_energy'
+    os.mkdir(tmp_dir)
+    try:
+        os.chdir(tmp_dir)
+        # set up fake dft_run
+        pp_path_list = []
+        argvf_template_path = ''
+        crystal_template_path = '' 
+        pos = []
+        gcut = -1
+        testrun = eval_pp.DftRun(pp_path_list, argvf_template_path,
+                                 crystal_template_path, pos, gcut)
+        forces_in = testrun.read_forces(test_inputs_dir+'/diaryf.test_get_forces')
+        # assert isclose(energy_in, -738.821147137)
+        assert False
+    finally:
+        os.chdir(main_dir)
+        shutil.rmtree(tmp_dir)
 
 # def test_run_socorro():
 #     '''

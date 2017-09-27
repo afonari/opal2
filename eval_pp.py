@@ -226,6 +226,18 @@ class DftRun:
             return None
 
 
+    def read_forces(self, diaryf='diaryf'):
+        """
+        reads forces from socorro output file
+        """
+        with open(diaryf) as fin:
+            for line in fin:
+                #if 'cell energy   ' in line:
+                #    return float(line.split()[3])
+                pass
+            return None
+
+
 
 
 def setup_file_structure():
