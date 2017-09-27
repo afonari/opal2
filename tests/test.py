@@ -5,10 +5,16 @@ import shutil
 import eval_pp
 import wrapper_pp
 
-main_dir = os.getcwd()
-test_dir = main_dir + '/tests'
+main_dir = os.getcwd() # current directory
+test_dir = main_dir + '/tests' # main test directory
 test_inputs_dir = main_dir + '/tests/test_inputs'
 
+
+def isclose(a, b, rel_tol=1e-9, abs_tol=0.0):
+    """
+    for comparing floats to double precision
+    """
+    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 def test_write_results(tmpdir):
     ''' writes objectives of 100, 100 to file, checks output '''
@@ -135,7 +141,28 @@ def test_get_forces():
     raise Exception('implement today')
 
 def test_get_energy():
-    raise Exception('implement today')
+    """
+    Read energy from example socorro ouput and check value is correct.
+    Run inside temporary directory.
+    is bad?
+    """
+    tmp_dir = test_dir + '/tmp_get_energy'
+    os.mkdir(tmp_dir)
+    try:
+        os.chdir(tmp_dir)
+        # set up fake dft_run
+        pp_path_list = []
+        argvf_template_path = ''
+        crystal_template_path = '' 
+        pos = []
+        gcut = -1
+        testrun = eval_pp.DftRun(pp_path_list, argvf_template_path,
+                                 crystal_template_path, pos, gcut)
+        energy_in = testrun.read_energy(test_inputs_dir+'/diaryf.test_get_energy')
+        assert is_close(energy_in, -738.821147137)
+    finally:
+        os.chdir(main_dir)
+        shutil.rmtree(tmp_dir)
 
 
 # def test_run_socorro():
