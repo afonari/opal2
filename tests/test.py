@@ -4,6 +4,7 @@ import os
 import shutil
 import eval_pp
 import wrapper_pp
+import numpy as np
 
 main_dir = os.getcwd() # current directory
 test_dir = main_dir + '/tests' # main test directory
@@ -204,11 +205,36 @@ def test_get_forces():
         testrun = eval_pp.DftRun(pp_path_list, argvf_template_path,
                                  crystal_template_path, pos, gcut)
         forces_in = testrun.read_forces(test_inputs_dir+'/diaryf.test_get_forces')
-        # assert isclose(energy_in, -738.821147137)
-        assert False
+        correct_forces = [[0.007170, -0.015092, -0.069756], [-0.007170, 0.015092, 0.069756]]
+        assert np.isclose(forces_in, correct_forces, rtol=1e-9, atol=0.0).all()
     finally:
         os.chdir(main_dir)
         shutil.rmtree(tmp_dir)
+
+
+def test_get_forces_none():
+    """
+    Read forces from example socorro ouput and check value is correct.
+    Run inside temporary directory.
+    """
+    tmp_dir = test_dir + '/tmp_get_energy'
+    os.mkdir(tmp_dir)
+    try:
+        os.chdir(tmp_dir)
+        # set up fake dft_run
+        pp_path_list = []
+        argvf_template_path = ''
+        crystal_template_path = '' 
+        pos = []
+        gcut = -1
+        testrun = eval_pp.DftRun(pp_path_list, argvf_template_path,
+                                 crystal_template_path, pos, gcut)
+        forces_in = testrun.read_forces(test_inputs_dir+'/diaryf.test_get_forces_none')
+        assert forces_in is None
+    finally:
+        os.chdir(main_dir)
+        shutil.rmtree(tmp_dir)
+
 
 # def test_run_socorro():
 #     '''

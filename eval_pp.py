@@ -230,11 +230,19 @@ class DftRun:
         """
         reads forces from socorro output file
         """
+        forces = np.array([]).reshape(0,3) # blank np array
         with open(diaryf) as fin:
             for line in fin:
-                #if 'cell energy   ' in line:
-                #    return float(line.split()[3])
-                pass
+                if 'Atomic forces:' in line:
+                    # skip two lines then continue through file
+                    fin.next()
+                    fin.next()
+                    for line in fin:
+                        if line.strip() == '':
+                            break # break when blank line after forces reached
+                        f = map(float, line.split()[1:4])
+                        forces = np.vstack([forces, f]) # append to froces array
+                    return forces
             return None
 
 
