@@ -5,10 +5,10 @@ import subprocess
 
 
 def main():
-    '''
+    """
     code within gcut loop is structured the way it is so socorro runs
     can be run in parallel subprocesses
-    '''
+    """
     # these are the same for different optimizations
     main_argvf_template_path = test_inputs_dir+'/argvf.template.example1'
     main_crystal_template_path = test_inputs_dir+'/crystal.template.example1'
@@ -21,6 +21,9 @@ def main():
     gcuts = np.arange(10.0, 110.0, 10.0)
 
     # increase gcut until converged
+    # these all_ lists are needed for convergence checks
+    all_energy = [] # will store all energies for each gcut
+    all_forces = [] # will store all energies for each gcut
     for gcut in gcuts:
         gcut_dir_name = 'gcut_dir.' + str(int(gcut))
         os.mkdir(gcut_dir_name)
@@ -28,23 +31,28 @@ def main():
 
         # creates dft run object for each position
         # NEED SOME SORT OF DIRECTORY MANAGEMENT HERE
-        dft_runs = []
+        position_dft_runs = []
         for pos in main_positions_to_run:
-            dft_runs.append(eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
-                                 main_crystal_template_path, pos, gcut))
+            position_dft_runs.append(eval_pp.DftRun(main_pp_path_list, 
+                                     main_argvf_template_path,
+                                     main_crystal_template_path, pos, gcut))
         
         # run socorro at position in parallel
-        position_sweep(dft_runs)
+        position_sweep(position_dft_runs)
 
-        # get energy and force reults from each socorro run
-        for dft_run in dft_runs:
+        # get energy and force results from each socorro run
+        energy_list = []
+        forces_list = []
+        for dft_run in position_dft_runs:
             if dft_run.is_successful:
-                dft_run.get_energy()
-                dft_run.get_forces()
-        # PRINT OUT INTERMEDIATE FORCES AND ENERGIES SOMEWHERE?
+                energy_list.append( dft_run.read_energy() )
+                forces_list.append( dft_run.read_forces() )
+        print_results(energy_list, forces_list)
+        all_energy.append(energy_list)
+        all_forces.append(forces_list)
 
         # check if results are converged with respect to gcut
-        if is_converged(dft_runs):
+        if is_converged(all_energy, all_forces):
             calculate_final_results(dft_runs)
             write_forces('converged_forces.dat')
             write_objectives('accuracy_obj.log')
@@ -53,44 +61,6 @@ def main():
         # do stuff related to no gcut converge
         pass
 
-
-#def position_sweep(pp_path_list, argvf_template_path,
-#                 crystal_template_path, atom_positions, gcut):
-def position_sweep(dft_runs):
-    '''
-    run several instances of socorro on different threads using
-    different positions
-    
-    when all socorro runs are done, returns dft_run objects
-
-    main_ variables are defined globally or in the calling function
-    '''
-    # where does this get output to?? change to logger
-    print 'Calling Dakota position sweep in', 'pwd'
-
-    # # create dft run object for each position to run
-    # dft_runs = []
-    # for r in atom_positions:
-    #     dft_runs.append(eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
-    #                              main_crystal_template_path, pos, gcut))
-
-    # for each dft run, set up files and start socorro subprocess
-    processes = []
-    for dft_run in dft_runs:
-        dft_run.setup_files()
-        # some sort of directory management
-        p = dft_run.run_socorro() # call socorro 
-        ps.append(p) # add p to process list
-    
-    # wait for each process to finish
-    for process in ps:
-        process.wait()
-
-
-    # WHAT HAPPENS IN EVENT OF WALL TIME LIMIT
-    check_socorro_fail()
-    # cases: success, wall time limit hit, socorro no converge, socorro fail
-    
 
 class DftRun:
     '''
@@ -128,16 +98,18 @@ class DftRun:
         self.crystal_template_path = crystal_template_path
         self._are_files_setup = False
 
-    def run_socorro(self):
+    def run_socorro(self, logfile):
         '''
         runs socorro in a subprocess, reurns process ID, and continues
+
+        log_file is file handle
         '''
         if self._are_files_setup is False:
             # wnat exit so jobs don't keep running
             print 'Files not setup yet. Must run setup_files() first'
             return False
         else:
-            p = subprocess.Popen('socorro')
+            p = subprocess.Popen('socorro', stdout=logfile, stderr=logfile)
             return p # return process id for wait later
    
     def setup_files(self):
@@ -229,6 +201,8 @@ class DftRun:
     def read_forces(self, diaryf='diaryf'):
         """
         reads forces from socorro output file
+    
+        returns forces as numpy array
         """
         forces = np.array([]).reshape(0,3) # blank np array
         with open(diaryf) as fin:
@@ -247,6 +221,45 @@ class DftRun:
 
 
 
+def position_sweep(dft_runs):
+    """
+    run several instances of socorro on different threads using
+    different positions
+    
+    when all socorro runs are done, returns dft_run objects
+
+    main_ variables are defined globally or in the calling function
+
+
+    still untested
+    """
+    print 'Calling Dakota position sweep in ', 'pwd'
+
+    # # create dft run object for each position to run
+    # dft_runs = []
+    # for r in atom_positions:
+    #     dft_runs.append(eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
+    #                              main_crystal_template_path, pos, gcut))
+
+    # for each dft run, set up files and start socorro subprocess
+    processes = []
+    for dft_run in dft_runs:
+        dft_run.setup_files()
+        # some sort of directory management
+        p = dft_run.run_socorro() # call socorro 
+        processes.append(p) # add p to process list
+    
+    # wait for each process to finish
+    for process in processes:
+        process.wait()
+
+    # WHAT HAPPENS IN EVENT OF WALL TIME LIMIT
+    check_socorro_fail()
+    # cases: success, wall time limit hit, socorro no converge, socorro fail
+    
+    
+    
+
 
 def setup_file_structure():
     """
@@ -255,11 +268,20 @@ def setup_file_structure():
     """
     pass
 
+def print_results(energy_list, forces_list):
+    """
+    prints energy and forces (this should get called for each gcut)
+
+    energy should be N element list (N=number of positions)
+    forces should be N element list, where each element is a
+    Mx3 element numpy array (M is numnber of atoms)
+    """
+    print 'energy: ', energy_list
+    print 'forces: ', forces_list # what happens when huge number of configs/atoms?
 
 
 def write_energy_line():
     pass
-
 
 
 def check_socorro_fail():
@@ -274,6 +296,8 @@ def check_socorro_fail():
     #   echo fail >$2
     #   exit
     # fi
+    
+    # can just do this with Nones for forces and energy
     pass
 
 
@@ -281,12 +305,16 @@ def write_data():
     pass
 
 
-def is_converged(dft_runs):
+def is_converged(energies, forces):
     '''
     loop through dft runs and check that energy or forces or whatever
     else is converged
+
+    maybe pass different options for convergence:
+    force vs. energy
+    tolerances
     '''
-    pass
+    return True
 
 
 def calculate_final_reults():

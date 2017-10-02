@@ -130,13 +130,6 @@ def test_setup_files():
         shutil.rmtree(tmp_dir)
 
 
-def test_run_socorro_no_files():
-    '''
-    test: run_socorro prints warning if files not created
-    '''
-    testrun = eval_pp.DftRun([], [], [], [], 0) 
-    assert testrun.run_socorro() is False
-
 
 def test_get_forces():
     raise Exception('implement today')
@@ -192,7 +185,7 @@ def test_get_forces():
     Read forces from example socorro ouput and check value is correct.
     Run inside temporary directory.
     """
-    tmp_dir = test_dir + '/tmp_get_energy'
+    tmp_dir = test_dir + '/tmp_get_forces'
     os.mkdir(tmp_dir)
     try:
         os.chdir(tmp_dir)
@@ -217,7 +210,7 @@ def test_get_forces_none():
     Read forces from example socorro ouput and check value is correct.
     Run inside temporary directory.
     """
-    tmp_dir = test_dir + '/tmp_get_energy'
+    tmp_dir = test_dir + '/tmp_get_forces_none'
     os.mkdir(tmp_dir)
     try:
         os.chdir(tmp_dir)
@@ -234,6 +227,18 @@ def test_get_forces_none():
     finally:
         os.chdir(main_dir)
         shutil.rmtree(tmp_dir)
+
+
+def test_is_converged():
+    raise Exception('currently returns True in any case')
+
+
+def test_run_socorro_no_files():
+    '''
+    test: run_socorro prints warning if files not created
+    '''
+    testrun = eval_pp.DftRun([], [], [], [], 0) 
+    assert testrun.run_socorro('') is False
 
 
 # def test_run_socorro():
