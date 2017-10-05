@@ -18,11 +18,7 @@ test_inputs_dir = tests_dir + '/test_inputs_socorro' # directory of test input f
  
 def test_run_socorro():
     """
-    test: setup_dir method makes files for socorro run
-
-    Expected behavior: calling setup_dir method will create correctly
-    preprocessed argvf file in current directory, directory named data/
-    and correctly preprocessed data/crystal file.
+    Set up socorro input files, run socorro, check force/energy results
 
     note: this might fail if socorro versions change because different
     versions could give different reults even with the same input,
