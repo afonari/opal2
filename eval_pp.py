@@ -81,6 +81,8 @@ class DftRun:
     crystal_template_path: see inputs
     atom_positions: see inputs
     gcut: see inputs
+    run_dir: dir where files are setup (and where socorro should be run
+        and where results will be)
     _are_files_setup: True if setup_files() run success, False otherwise
 
     public methods
@@ -97,6 +99,7 @@ class DftRun:
         self.argvf_template_path = argvf_template_path
         self.crystal_template_path = crystal_template_path
         self._are_files_setup = False
+        self.run_dir = None
 
     def run_socorro(self, logfile):
         '''
@@ -120,6 +123,7 @@ class DftRun:
         already exist. This may be desirable behavior but if not I can
         change it.
         '''
+        self.run_dir = os.getcwd()
         self._make_argvf()
         os.mkdir('data')
         self._make_crystal()
@@ -233,21 +237,23 @@ def position_sweep(dft_runs):
 
     still untested
     """
-    print 'Calling Dakota position sweep in ', 'pwd'
-
-    # # create dft run object for each position to run
-    # dft_runs = []
-    # for r in atom_positions:
-    #     dft_runs.append(eval_pp.DftRun(main_pp_path_list, main_argvf_template_path,
-    #                              main_crystal_template_path, pos, gcut))
+    pos_sweep_dir = os.getcwd()
+    print 'Calling Dakota position sweep in ' + pos_sweep_dir
 
     # for each dft run, set up files and start socorro subprocess
     processes = []
-    for dft_run in dft_runs:
+    for i,dft_run in enumerate(dft_runs):
+        this_dir = 'workdir_r.'+str(i+1)
+        os.mkdir(this_dir)
+        os.chdir(this_dir)
+
         dft_run.setup_files()
-        # some sort of directory management
-        p = dft_run.run_socorro() # call socorro 
+        with open('socorro.log', 'w') as fout:
+            p = dft_run.run_socorro(fout)
         processes.append(p) # add p to process list
+        
+        os.chdir(pos_sweep_dir)
+        
     
     # wait for each process to finish
     for process in processes:
