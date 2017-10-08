@@ -28,42 +28,15 @@ def main():
         gcut_dir_name = 'gcut_dir.' + str(int(gcut))
         os.mkdir(gcut_dir_name)
         os.cwd(gcut_dir_name)
-
-        ###################################################################
-        # REFACTOR THIS INTO SMALLER, TESTABLE FUNCTION ?
-        ###################################################################
-
-        # creates dft run object for each position
-        # NEED SOME SORT OF DIRECTORY MANAGEMENT HERE
-        position_dft_runs = []
-        for pos in main_positions_to_run:
-            position_dft_runs.append(eval_pp.DftRun(main_pp_path_list, 
-                                     main_argvf_template_path,
-                                     main_crystal_template_path, pos, gcut))
         
-        # run socorro at position in parallel
-        position_sweep(position_dft_runs)
+        # return energies, forces, true/false
+        all_successful, e_list, f_list =  calculate_forces_at_gcut()
 
-        # get energy and force results from each socorro run
-        energy_list = []
-        forces_list = []
-        for dft_run in position_dft_runs:
-            # if a run did not finish, dft_run.read_*() will return None
-            energy_list.append( dft_run.read_energy() )
-            forces_list.append( dft_run.read_forces() )
-        all_energy.append(energy_list)
-        all_forces.append(forces_list)
-
-        # print results gcut by gcut in case of wall time kill
-        print_results(energy_list, forces_list) 
-        
-        if None in energy_list or None in forces_list: 
+        # sometimes dft runs diverge
+        if not all_successful:
             # write artificial objective
             write_objectives('accuracy_obj.log')
             pass
-
-        ###################################################################
-        ###################################################################
 
         # check if results are converged with respect to gcut
         if is_converged(all_energy, all_forces):
@@ -356,3 +329,31 @@ def get_pp_path_list():
 
 def not_all_completed():
     pass
+
+def calculate_forces_at_gcut():
+    # creates dft run object for each position
+    # NEED SOME SORT OF DIRECTORY MANAGEMENT HERE
+    position_dft_runs = []
+    for pos in main_positions_to_run:
+        position_dft_runs.append(eval_pp.DftRun(main_pp_path_list, 
+                                 main_argvf_template_path,
+                                 main_crystal_template_path, pos, gcut))
+    
+    # run socorro at position in parallel
+    position_sweep(position_dft_runs)
+
+    # get energy and force results from each socorro run
+    energy_list = []
+    forces_list = []
+    for dft_run in position_dft_runs:
+        # if a run did not finish, dft_run.read_*() will return None
+        energy_list.append( dft_run.read_energy() )
+        forces_list.append( dft_run.read_forces() )
+    all_energy.append(energy_list)
+    all_forces.append(forces_list)
+
+    # print results gcut by gcut in case of wall time kill
+    print_results(energy_list, forces_list) 
+    
+
+    return 0,0,0
