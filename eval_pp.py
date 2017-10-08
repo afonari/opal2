@@ -29,6 +29,10 @@ def main():
         os.mkdir(gcut_dir_name)
         os.cwd(gcut_dir_name)
 
+        ###################################################################
+        # REFACTOR THIS INTO SMALLER, TESTABLE FUNCTION ?
+        ###################################################################
+
         # creates dft run object for each position
         # NEED SOME SORT OF DIRECTORY MANAGEMENT HERE
         position_dft_runs = []
@@ -44,12 +48,22 @@ def main():
         energy_list = []
         forces_list = []
         for dft_run in position_dft_runs:
-            if dft_run.is_successful:
-                energy_list.append( dft_run.read_energy() )
-                forces_list.append( dft_run.read_forces() )
-        print_results(energy_list, forces_list)
+            # if a run did not finish, dft_run.read_*() will return None
+            energy_list.append( dft_run.read_energy() )
+            forces_list.append( dft_run.read_forces() )
         all_energy.append(energy_list)
         all_forces.append(forces_list)
+
+        # print results gcut by gcut in case of wall time kill
+        print_results(energy_list, forces_list) 
+        
+        if None in energy_list or None in forces_list: 
+            # write artificial objective
+            write_objectives('accuracy_obj.log')
+            pass
+
+        ###################################################################
+        ###################################################################
 
         # check if results are converged with respect to gcut
         if is_converged(all_energy, all_forces):
@@ -105,7 +119,12 @@ class DftRun:
         '''
         runs socorro in a subprocess, reurns process ID, and continues
 
-        log_file is file handle
+        if files haven't been set up:
+            return False after printing warning
+        if socorro runs and finishes successfully:
+            return process ID from Popen
+
+        log_file: file handle for logging soccoro stdout/err output
         '''
         if self._are_files_setup is False:
             # wnat exit so jobs don't keep running
@@ -234,7 +253,6 @@ def position_sweep(dft_runs):
 
     main_ variables are defined globally or in the calling function
 
-
     still untested
     """
     pos_sweep_dir = os.getcwd()
@@ -334,4 +352,7 @@ def get_random_configurations():
     pass
 
 def get_pp_path_list():
+    pass
+
+def not_all_completed():
     pass
