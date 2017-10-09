@@ -304,26 +304,27 @@ def write_data():
 
 def is_converged(energies_so_far, tol):
     """
-    loop through dft runs and check that energy or forces or whatever
-    else is converged
+    Check if energies for latest gcut have changed by less than tol.
 
     energies_so_far: list of lists of energies, for all gcuts so far
+    tol: absolute energy tolerance
+    
+    returns True if abs(E[-1]-E[-2])<tol for all configurations, 
+    and False otherwise.
 
-    maybe pass different options for convergence:
-    force vs. energy
-    tolerances
-
-    several options here...for previous work i use energy residuals
-    as a convergence criterion so i'll write it that way for now
+    There are several possibilites for specifying convergence. If I
+    change my mind about how I want to handle convergence (perhaps test
+    forces instead of energy, or change to realtive tolerance), I can 
+    replace this function. For previous work i use energy residuals
+    as a convergence criterion so I'll write it that way for now.
     """
     if len(energies_so_far) == 1:
         # can't be converged if only one gcut has run
         return False
     
+    # check all energy residuals less than tolerance
     energies_latest = energies_so_far[-1] 
     energies_previous = energies_so_far[-2]
-
-    # check all energy resilduals less than tolerance
     return np.isclose(energies_latest, energies_previous, atol=tol).all()
 
 
