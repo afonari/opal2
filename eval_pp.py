@@ -50,7 +50,7 @@ def main():
 
 
 class DftRun:
-    '''
+    """
     class for setting up, running, and post processing soccoro dft
     calculation 
 
@@ -77,7 +77,7 @@ class DftRun:
      (argvf and crystal)
     run_socorro: system calls socorro in current directory, only works
      if _are_files_setup is True
-    '''
+    """
     def __init__(self, pp_path_list, argvf_template_path,
                  crystal_template_path, atom_positions, gcut):
         self.pp_path_list = pp_path_list
@@ -89,7 +89,7 @@ class DftRun:
         self.run_dir = None
 
     def run_socorro(self, logfile):
-        '''
+        """
         runs socorro in a subprocess, reurns process ID, and continues
 
         if files haven't been set up:
@@ -98,7 +98,7 @@ class DftRun:
             return process ID from Popen
 
         log_file: file handle for logging soccoro stdout/err output
-        '''
+        """
         if self._are_files_setup is False:
             # wnat exit so jobs don't keep running
             print 'Files not setup yet. Must run setup_files() first'
@@ -108,13 +108,13 @@ class DftRun:
             return p # return process id for wait later
    
     def setup_files(self):
-        '''
+        """
         write dft input files from templates 
 
         note this will probably fail if argvf, data/, or data/crystal
         already exist. This may be desirable behavior but if not I can
         change it.
-        '''
+        """
         self.run_dir = os.getcwd()
         self._make_argvf()
         os.mkdir('data')
@@ -123,7 +123,7 @@ class DftRun:
         self._are_files_setup = True
 
     def _make_argvf(self):
-        ''' writes preprocessed argvf text to argvf file '''
+        """ writes preprocessed argvf text to argvf file """
         # read in text from template file
         with open(self.argvf_template_path) as fin:
             argvf_template_text = fin.readlines()
@@ -282,11 +282,11 @@ def write_energy_line():
 
 
 def check_socorro_fail():
-    '''
+    """
     check for non-convergence of socorro run by reading diaryf file
 
     previous opal would return 102s as objectives
-    '''
+    """
     #     # If socorro didn't ouptut forces or energy, it didn't complete successfully
     # did_force=$(grep "Atomic force" diaryf)
     # if [[ $did_force == "" ]]; then
@@ -302,16 +302,29 @@ def write_data():
     pass
 
 
-def is_converged(energies, forces):
-    '''
+def is_converged(energies_so_far, tol):
+    """
     loop through dft runs and check that energy or forces or whatever
     else is converged
+
+    energies_so_far: list of lists of energies, for all gcuts so far
 
     maybe pass different options for convergence:
     force vs. energy
     tolerances
-    '''
-    return True
+
+    several options here...for previous work i use energy residuals
+    as a convergence criterion so i'll write it that way for now
+    """
+    if len(energies_so_far) == 1:
+        # can't be converged if only one gcut has run
+        return False
+    
+    energies_latest = energies_so_far[-1] 
+    energies_previous = energies_so_far[-2]
+
+    # check all energy resilduals less than tolerance
+    return np.isclose(energies_latest, energies_previous, atol=tol).all()
 
 
 def calculate_final_reults():

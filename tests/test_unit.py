@@ -18,7 +18,7 @@ def isclose(a, b, rel_tol=1e-9, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 def test_write_results(tmpdir):
-    ''' writes objectives of 100, 100 to file, checks output '''
+    """ writes objectives of 100, 100 to file, checks output """
     wrapper_pp.write_results_file({'accu': 100, 'work': 101})
     with open('results') as f:
         results_output = f.readlines()
@@ -27,7 +27,7 @@ def test_write_results(tmpdir):
 
 
 def test_preproc_argvf():
-    ''' make sure {gcut} and {4gcut} are replaced in text correctly '''
+    """ make sure {gcut} and {4gcut} are replaced in text correctly """
     gcut = 40.
     example_template = 'tests/test_inputs/argvf.template.example1'
     testrun = eval_pp.DftRun([], example_template, '', [], gcut)
@@ -38,9 +38,9 @@ def test_preproc_argvf():
 
 
 def test_preproc_crystal():
-    ''' check crystal coordinates placed in text correctly 
+    """ check crystal coordinates placed in text correctly 
     would be better to add a couple more test cases
-    '''
+    """
     pos = [[0.0, 0, '0.1'], [0.5, 0.6, 0.7]]
     example_template = 'tests/test_inputs/crystal.template.example1'
     with open(example_template) as fin:
@@ -58,11 +58,11 @@ def test_preproc_crystal():
 
 
 def test_symlink_pseudopotentials():
-    '''
+    """
     symlinks pseudopotentials into data/ directory and compares to 
     original pseudopotential files. Obviously they'll be the same
     but this makes sure the file operations work
-    '''
+    """
     tmp_dir = test_dir + '/tmp_symlink_pseudopotential'
     os.mkdir(tmp_dir)
     try:
@@ -92,13 +92,13 @@ def test_symlink_pseudopotentials():
 
 
 def test_setup_files():
-    ''' 
+    """ 
     test: setup_dir method makes files for socorro run
 
     Expected behavior: calling setup_dir method will create correctly
     preprocessed argvf file in current directory, directory named data/
     and correctly preprocessed data/crystal file.
-    '''
+    """
     tmp_dir = test_dir + '/tmp_setup_files'
     os.mkdir(tmp_dir)
     correct_argvf = test_inputs_dir+'/argvf.example1'
@@ -229,27 +229,32 @@ def test_get_forces_none():
         shutil.rmtree(tmp_dir)
 
 
-def test_is_converged():
-    raise Exception('currently returns True in any case')
-
+def test_is_converged_converged():
+    """these tests will depend on changing the tolerances
+    """    
+    tol =1e-8
+    e1 = [1.10e-7, 0.80e-7, 5.0e-7, 1.0e-8]
+    e2 = [1.15e-7, 0.75e-7, 5.0e-7, 1.5e-9]
+    energies = [np.array(e1), np.array(e2)]
+    assert eval_pp.is_converged(energies, tol)
 
 def test_run_socorro_no_files():
-    '''
+    """
     test: run_socorro prints warning if files not created
-    '''
+    """
     testrun = eval_pp.DftRun([], [], [], [], 0) 
     assert testrun.run_socorro('') is False
 
 
 # def test_run_socorro():
-#     '''
+#     """
 #     run_socorro should return true when files set up correctly
 #     
 #     Ideally I could fake the file setup?
 #     I should also mock a system call to socorro maybe, since currently
 #     it actaully calls socorro (which aborts quickly because no input
 #     files found)
-#     '''
+#     """
 #     testrun = eval_pp.DftRun([], [], [], [], 0) 
 #     testrun._are_files_setup = True
 #     assert testrun.run_socorro() is True
