@@ -115,12 +115,12 @@ class DftRun:
         already exist. This may be desirable behavior but if not I can
         change it.
         """
-        self.run_dir = os.getcwd()
         self._make_argvf()
         os.mkdir('data')
         self._make_crystal()
         self._symlink_pseudopotentials()
         self._are_files_setup = True
+        self.run_dir = os.getcwd()
 
     def _make_argvf(self):
         """ writes preprocessed argvf text to argvf file """
@@ -255,9 +255,6 @@ def position_sweep(dft_runs):
     # cases: success, wall time limit hit, socorro no converge, socorro fail
     
     
-    
-
-
 def setup_file_structure():
     """
     create file structure for running dft code at given gcut, might
@@ -368,6 +365,5 @@ def calculate_forces_at_gcut():
 
     # print results gcut by gcut in case of wall time kill
     print_results(energy_list, forces_list) 
-    
 
     return 0,0,0
