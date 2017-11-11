@@ -8,6 +8,12 @@ def main():
     """
     code within gcut loop is structured the way it is so socorro runs
     can be run in parallel subprocesses
+
+    all_energy: energy at every configuration for each gcut.
+        all_energy[i][j] is the energy for the ith gcut and jth config
+    all_forces: forces at every configuration for each gcut.
+        all_energy[i][j][k, m] is the force for the ith gcut, jth 
+        config, kth atom, and m=0,1,2 for x,y,z direction
     """
     # these are the same for different optimizations
     main_argvf_template_path = test_inputs_dir+'/argvf.template.example1'
@@ -37,6 +43,9 @@ def main():
             # write artificial objective
             write_objectives('accuracy_obj.log')
             pass
+          
+        all_energy.append(energy_list)
+        all_forces.append(forces_list)
 
         # check if results are converged with respect to gcut
         if is_converged(all_energy, all_forces):
@@ -328,20 +337,26 @@ def is_converged(energies_so_far, tol):
 def calculate_final_reults():
     pass
 
-
 def get_converged_forces():
     pass
 
-def get_random_configurations():
-    pass
+def get_random_configurations(filename):
+    """ 
+    Read random atomic configurations from file.
+
+    Configurations should be formatted one random configuration per 
+    line, where each group of three coordinates is one atom. 
+    """
+    return np.genfromtxt(filename, comments='#') 
 
 def get_pp_path_list():
     pass
 
-def not_all_completed():
-    pass
-
 def calculate_forces_at_gcut():
+    """
+    This is essentially a wrapper around my position sweep function
+    to make main() easier to read and to make testing easier.
+    """
     # creates dft run object for each position
     # NEED SOME SORT OF DIRECTORY MANAGEMENT HERE
     position_dft_runs = []
@@ -360,10 +375,13 @@ def calculate_forces_at_gcut():
         # if a run did not finish, dft_run.read_*() will return None
         energy_list.append( dft_run.read_energy() )
         forces_list.append( dft_run.read_forces() )
-    all_energy.append(energy_list)
-    all_forces.append(forces_list)
 
     # print results gcut by gcut in case of wall time kill
     print_results(energy_list, forces_list) 
 
-    return 0,0,0
+    if None in energy_list or None in forces_list:
+        all_successful = False
+    else:
+        all_successful = True
+
+    return all_succesful, 0,0

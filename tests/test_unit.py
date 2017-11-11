@@ -275,6 +275,17 @@ def test_run_socorro_no_files():
     assert testrun.run_socorro('') is False
 
 
+def test_get_random_configurations():
+    """Read random configs from file
+    """
+    positions_file = test_inputs_dir + '/configurations.in.example'
+    positions = eval_pp.get_random_configurations(positions_file)
+    assert (positions == [[0.00000, 0.00000, 0.00000,  0.37167, 0.50580, 0.47536],
+                          [0.00000, 0.00000, 0.00000,  0.74019, 0.24042, 0.44835],
+                          [0.00000, 0.00000, 0.00000,  0.49723, 0.50676, 0.22171],
+                          [0.00000, 0.00000, 0.00000,  0.59089, 0.49233, 0.32916]]).all()
+
+
 # def test_run_socorro():
 #     """
 #     run_socorro should return true when files set up correctly
