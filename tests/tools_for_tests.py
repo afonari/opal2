@@ -5,7 +5,6 @@ import tempfile
 
 main_dir = os.getcwd()
 test_dir = os.path.join(main_dir, 'tests')  # main test directory
-test_inputs_dir = os.path.join(test_dir, 'test_inputs')
 
 class TemporaryDirectory(object):
     """
