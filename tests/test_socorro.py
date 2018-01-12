@@ -13,11 +13,11 @@ sys.path.append('.')
 import shutil
 import eval_pp
 import numpy as np
+import tools_for_tests
 
-main_dir = os.getcwd()  # test called from this directory
-tests_dir = main_dir + '/tests'  # directory containings test scripts
-test_inputs_dir = tests_dir + '/test_inputs_socorro' # directory of test input files
- 
+# directory of test input files
+test_inputs_dir = os.path.join(tools_for_tests.test_dir, 'test_inputs_socorro')
+
 def test_run_socorro():
     """
     Set up socorro input files, run socorro, check force/energy results
@@ -28,11 +28,8 @@ def test_run_socorro():
     Alternatively, I could run socorro twice, the second time with pre-
     setup input files, and compare results
     """
-    tmp_dir = tests_dir + '/tmp_socorro_run'
     inputs = test_inputs_dir + '/SiGe_single_run'
-    try:
-        os.mkdir(tmp_dir)
-        os.chdir(tmp_dir)
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
         # create object to test
         pp_path_list = [inputs+'/PAW.Si',
                         inputs+'/PAW.Ge']
@@ -52,9 +49,6 @@ def test_run_socorro():
                                   [-0.246519, -0.247743, -0.243064]])
         assert testrun.read_energy() == correct_energy
         assert np.isclose(testrun.read_forces(), correct_forces).all()
-    finally:
-        os.chdir(main_dir)
-        shutil.rmtree(tmp_dir)
 
 
 def test_position_sweep():
@@ -70,12 +64,8 @@ def test_position_sweep():
     Alternatively, I could run socorro twice, the second time with pre-
     setup input files, and compare results
     """
-    tmp_dir = tests_dir + '/tmp_postition_sweep'
     inputs = test_inputs_dir + '/SiGe_single_run'
-    try:
-        os.mkdir(tmp_dir)
-        os.chdir(tmp_dir)
-
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
         positions = [[[0.0, 0.0, 0.1], [0.24, 0.25, 0.26]],
                      [[0.0, 0.0, 0.0], [0.50, 0.50, 0.50]],
                      [[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]],
@@ -116,6 +106,3 @@ def test_position_sweep():
 
         assert energies == correct_en
         assert np.isclose(forces, correct_forces).all()
-    finally:
-        os.chdir(main_dir)
-        shutil.rmtree(tmp_dir)

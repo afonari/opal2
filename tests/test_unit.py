@@ -7,7 +7,9 @@ import eval_pp
 import wrapper_pp
 import numpy as np
 import tools_for_tests
-from tools_for_tests import test_inputs_dir
+
+# directory of test input files
+test_inputs_dir = os.path.join(tools_for_tests.test_dir, 'test_inputs')
 
 def isclose(a, b, rel_tol=1e-9, abs_tol=0.0):
     """
