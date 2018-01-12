@@ -158,6 +158,10 @@ class DftRun:
         return new_text
 
     def _make_crystal(self):
+        """
+        Some socorro builds want the crystal file in data/
+        and some want it in the run directory.
+        """
         # read in text from template file
         with open(self.crystal_template_path) as fin:
             crystal_template_text = fin.readlines()
@@ -166,6 +170,7 @@ class DftRun:
         # write preprocessed text to data/crystal
         with open('data/crystal', 'w') as fout:
             fout.writelines(preprocessed_text)
+        os.symlink('data/crystal', 'crystal')
  
     @staticmethod
     def _preproc_crystal(mytext, atom_positions):
@@ -182,9 +187,13 @@ class DftRun:
         """ 
         symlinks pseudopotentials files from pp_path_list
         to data/ directory so socorro can find them
+        
+        Some socorro builds want the pseudopotential in data/
+        and some want it in the run directory.
         """
         for pp in self.pp_path_list:
             pp_name = os.path.basename(pp)
+            os.symlink(pp, pp_name)
             os.symlink(pp, 'data/'+pp_name)
 
     def read_energy(self, diaryf='diaryf'):
