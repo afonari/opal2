@@ -6,11 +6,8 @@ import shutil
 import eval_pp
 import wrapper_pp
 import numpy as np
-
-main_dir = os.getcwd() # current directory
-test_dir = main_dir + '/tests' # main test directory
-test_inputs_dir = main_dir + '/tests/test_inputs'
-
+import tools_for_tests
+from tools_for_tests import test_inputs_dir
 
 def isclose(a, b, rel_tol=1e-9, abs_tol=0.0):
     """
@@ -64,10 +61,7 @@ def test_symlink_pseudopotentials():
     original pseudopotential files. Obviously they'll be the same
     but this makes sure the file operations work
     """
-    tmp_dir = test_dir + '/tmp_symlink_pseudopotential'
-    os.mkdir(tmp_dir)
-    try:
-        os.chdir(tmp_dir)
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
         # create object to test
         pp_path_list = [test_inputs_dir+'/PAW.Si', 
                         test_inputs_dir+'/PAW.Ge']
@@ -87,9 +81,6 @@ def test_symlink_pseudopotentials():
             assert f1.read() == f2.read()
         with open('data/PAW.Ge') as f1, open(pp_path_list[1]) as f2:
             assert f1.read() == f2.read()
-    finally:
-        os.chdir(main_dir)
-        shutil.rmtree(tmp_dir)
 
 
 def test_setup_files():
@@ -100,14 +91,11 @@ def test_setup_files():
     preprocessed argvf file in current directory, directory named data/
     and correctly preprocessed data/crystal file.
     """
-    tmp_dir = test_dir + '/tmp_setup_files'
-    os.mkdir(tmp_dir)
     correct_argvf = test_inputs_dir+'/argvf.example1'
     correct_crystal = test_inputs_dir+'/crystal.example1'
     correct_Si = test_inputs_dir+'/PAW.Si'
     correct_Ge = test_inputs_dir+'/PAW.Ge'
-    try:
-        os.chdir(tmp_dir)
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
         # create object to test
         pp_path_list = [test_inputs_dir+'/PAW.Si',
                         test_inputs_dir+'/PAW.Ge']
@@ -126,9 +114,6 @@ def test_setup_files():
             assert f1.read() == f2.read()
         with open('data/PAW.Ge') as f1, open(correct_Ge) as f2:
             assert f1.read() == f2.read()
-    finally:
-        os.chdir(main_dir)
-        shutil.rmtree(tmp_dir)
 
 
 
@@ -140,10 +125,7 @@ def test_get_energy():
     Read energy from example socorro ouput and check value is correct.
     Run inside temporary directory.
     """
-    tmp_dir = test_dir + '/tmp_get_energy'
-    os.mkdir(tmp_dir)
-    try:
-        os.chdir(tmp_dir)
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
         # set up fake dft_run
         pp_path_list = []
         argvf_template_path = ''
@@ -154,19 +136,13 @@ def test_get_energy():
                                  crystal_template_path, pos, gcut)
         energy_in = testrun.read_energy(test_inputs_dir+'/diaryf.test_get_energy')
         assert isclose(energy_in, -738.821147137)
-    finally:
-        os.chdir(main_dir)
-        shutil.rmtree(tmp_dir)
 
 
 def test_get_energy_none():
     """
     should return None because no cell energy found in socorro output
     """
-    tmp_dir = test_dir + '/tmp_get_energy_none'
-    os.mkdir(tmp_dir)
-    try:
-        os.chdir(tmp_dir)
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
         # set up fake dft_run
         pp_path_list = []
         argvf_template_path = ''
@@ -177,19 +153,13 @@ def test_get_energy_none():
                                  crystal_template_path, pos, gcut)
         energy_in = testrun.read_energy(test_inputs_dir+'/diaryf.test_get_energy_none')
         assert energy_in is None
-    finally:
-        os.chdir(main_dir)
-        shutil.rmtree(tmp_dir)
 
 def test_get_forces():
     """
     Read forces from example socorro ouput and check value is correct.
     Run inside temporary directory.
     """
-    tmp_dir = test_dir + '/tmp_get_forces'
-    os.mkdir(tmp_dir)
-    try:
-        os.chdir(tmp_dir)
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
         # set up fake dft_run
         pp_path_list = []
         argvf_template_path = ''
@@ -201,9 +171,6 @@ def test_get_forces():
         forces_in = testrun.read_forces(test_inputs_dir+'/diaryf.test_get_forces')
         correct_forces = [[0.007170, -0.015092, -0.069756], [-0.007170, 0.015092, 0.069756]]
         assert np.isclose(forces_in, correct_forces, rtol=1e-9, atol=0.0).all()
-    finally:
-        os.chdir(main_dir)
-        shutil.rmtree(tmp_dir)
 
 
 def test_get_forces_none():
@@ -211,10 +178,7 @@ def test_get_forces_none():
     Read forces from example socorro ouput and check value is correct.
     Run inside temporary directory.
     """
-    tmp_dir = test_dir + '/tmp_get_forces_none'
-    os.mkdir(tmp_dir)
-    try:
-        os.chdir(tmp_dir)
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
         # set up fake dft_run
         pp_path_list = []
         argvf_template_path = ''
@@ -225,9 +189,6 @@ def test_get_forces_none():
                                  crystal_template_path, pos, gcut)
         forces_in = testrun.read_forces(test_inputs_dir+'/diaryf.test_get_forces_none')
         assert forces_in is None
-    finally:
-        os.chdir(main_dir)
-        shutil.rmtree(tmp_dir)
 
 
 def test_is_converged_converged():
