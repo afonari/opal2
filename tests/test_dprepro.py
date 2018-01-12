@@ -15,7 +15,7 @@ test_inputs_dir = os.path.join(tools_for_tests.test_dir, 'test_inputs_dprepro')
 
 def test_preprocess_pseudopotential_input_files():
     """
-    
+    Test preprocessing files with dprepro and related file management. 
     """
     with tools_for_tests.TemporaryDirectory() as tmp_dir:
         # preprocess files
