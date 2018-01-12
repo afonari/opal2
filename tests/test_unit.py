@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+sys.path.append('.')
 import os
 import shutil
 import eval_pp

@@ -8,6 +8,8 @@
 # and writing results
 
 import os
+import sys
+sys.path.append('.')
 import shutil
 import eval_pp
 import numpy as np
