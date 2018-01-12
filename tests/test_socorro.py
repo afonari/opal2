@@ -47,8 +47,8 @@ def test_run_socorro():
         correct_energy = -312.593586340
         correct_forces = np.array([[0.246519, 0.247743, 0.243064],
                                   [-0.246519, -0.247743, -0.243064]])
-        assert testrun.read_energy() == correct_energy
-        assert np.isclose(testrun.read_forces(), correct_forces).all()
+        assert np.isclose(testrun.read_energy(), correct_energy)
+        assert np.isclose(testrun.read_forces(), correct_forces, atol=1.e-5).all()
 
 
 def test_position_sweep():
@@ -104,5 +104,5 @@ def test_position_sweep():
                            np.array([[+0.157293, +0.169207, -0.024752],
                                      [-0.157293, -0.169207, +0.024752]]) ]
 
-        assert energies == correct_en
-        assert np.isclose(forces, correct_forces).all()
+        assert np.isclose(energies, correct_en).all()
+        assert np.isclose(forces, correct_forces, atol=1.e-5).all()
