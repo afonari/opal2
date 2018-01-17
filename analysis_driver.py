@@ -32,8 +32,38 @@ def mock_evaluate_pp():
 def write_results():
     pass
 
-def create_pseudopotentials():
-    return True
+# def create_pseudopotentials(element_list):
+#     """
+#     loops through element list
+#     for each element, makes a directory in which to create psueodpotential
+#     and keep log and atompaw output
+#     symlinks to pseudopotentials from main directory
+#     """
+#     start_dir = os.getcwd()
+#     for elem in element_list:
+#         atompaw_input_filename = elem+'.in'
+#         # create directory
+#         dir_name = elem+'_pseudopotential'
+#         os.mkdir(dir_name)
+#         os.chdir(dir_name)
+#         # go to directory
+#         os.symlink(
+#         # ln -s ../$elem.in
+#         os.symlink
+#         # some sort of error handling??
+#         with open(atompaw_input_filename,'r') as input_fin, open('log', 'w') as log_fout: 
+#             subprocess.call(['atompaw'], stdin=input_fin, stdout=log_fout)
+#         os.chdir(start_dir)
+#         os.symlink(os.path.join(dir_name, paw_name), paw_name)
+
+
+def run_atompaw(atompaw_input_filename):
+    """
+    runs atompaw in current directory for given input file
+    currently assumes atompaw4
+    """
+    with open(atompaw_input_filename,'r') as input_fin, open('log', 'w') as log_fout: 
+        subprocess.call(['atompaw'], stdin=input_fin, stdout=log_fout)
 
 def preprocess_pseudopotential_input_files(element_list, template_path):
     """
@@ -49,6 +79,25 @@ def preprocess_pseudopotential_input_files(element_list, template_path):
         subprocess.check_call(['dprepro', 'params', template_file, new_input_file])
             
 
-
 if __name__=='__main__':
     main()
+
+
+
+
+# FROM OLD CREATE_PP.PY
+### FOR ATOMPAW VERSION 4
+# # write 100s to results.tmp and exit if pseudopotential not created correctly:
+# if 'Error in EvaluateTP -- no convergence' in open(atompaw_log_file).read():
+#   # write results.tmp
+#   with open('atompaw_not_converged','w') as fout:
+#     fout.write('no convergence for ' + element + ' \n')
+#   exit()
+#
+### FOR ATOMPAW VERSION 3
+# # write 100s to results.tmp and exit if pseudopotential not created correctly:
+# if '-- no convergence' in open(atompaw_log_file).read():
+#   # write results.tmp
+#   with open('atompaw_not_converged','w') as fout:
+#     fout.write('no convergence for ' + element + ' \n')
+#   exit()
