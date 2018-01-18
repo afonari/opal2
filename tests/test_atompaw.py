@@ -58,6 +58,20 @@ def test_create_pseudopotentials():
             assert f1.read() == f2.read()
         
     
+def test_is_pseudopotential_converged_good():
+    """
+    case where atompaw creates PAW successfully
+    """
+    good_log = os.path.join(test_inputs_dir, 'log.good')
+    assert analysis_driver.is_pseudopotential_converged(good_log) is True
+
+def test_is_pseudopotential_converged_no_convergence():
+    """
+    case where atompaw does not converge
+    """
+    no_converge_log = os.path.join(test_inputs_dir, 'log.noconverge')
+    assert analysis_driver.is_pseudopotential_converged(no_converge_log) is False
+
 
 """
 test cases:
