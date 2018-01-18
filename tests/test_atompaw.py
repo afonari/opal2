@@ -32,7 +32,7 @@ def test_run_atompaw():
             assert f1.read() == f2.read()
 
 
-def test_create_pseudopotentials():
+def test_create_all_pseudopotentials():
     """
     Run in a directory with multiple atompaw input files, builds each PAW
     in its own directory.
@@ -48,7 +48,8 @@ def test_create_pseudopotentials():
         shutil.copy(os.path.join(test_inputs_dir, 'Si.in'), os.getcwd())
         shutil.copy(os.path.join(test_inputs_dir, 'Ge.in'), os.getcwd())
         element_list = ['Si', 'Ge']
-        analysis_driver.create_pseudopotentials(element_list)
+        is_successful = analysis_driver.create_all_pseudopotentials(element_list)
+        assert is_successful
         
         Si_file_correct = os.path.join(test_inputs_dir, 'PAW.Si.correct')
         with open(Si_file_correct) as f1, open('PAW.Si') as f2:
@@ -56,27 +57,11 @@ def test_create_pseudopotentials():
         Ge_file_correct = os.path.join(test_inputs_dir, 'PAW.Ge.correct')
         with open(Ge_file_correct) as f1, open('PAW.Ge') as f2:
             assert f1.read() == f2.read()
-        
-    
-def test_is_pseudopotential_converged_good():
-    """
-    case where atompaw creates PAW successfully
-    """
-    good_log = os.path.join(test_inputs_dir, 'log.good')
-    assert analysis_driver.is_pseudopotential_converged(good_log) is True
 
-def test_is_pseudopotential_converged_no_convergence():
-    """
-    case where atompaw does not converge
-    """
-    no_converge_log = os.path.join(test_inputs_dir, 'log.noconverge')
-    assert analysis_driver.is_pseudopotential_converged(no_converge_log) is False
-
-
-"""
-test cases:
-
-bad input (non_convergence)...need to dig through old runs for this
-sweep of different elements
-bad case of RCs? do this later (add github issue, or keep ISSUES list)
-"""
+def test_create_all_pseudopotentials_fail():
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
+        shutil.copy(os.path.join(test_inputs_dir, 'Si.in.wontconverge'), 'Si.in')
+        shutil.copy(os.path.join(test_inputs_dir, 'Ge.in'), os.getcwd())
+        element_list = ['Si', 'Ge']
+        is_successful = analysis_driver.create_all_pseudopotentials(element_list)
+        assert is_successful is False

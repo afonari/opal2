@@ -26,51 +26,70 @@ print(template_path_list)
 
 def main():
     preprocess_pseudopotential_input_files(element_list, templates_dir)
-    is_successful = create_pseudopotentials()
+    is_successful = create_all_pseudopotentials()
     if is_successful:
-        objectives = mock_evaluate_pp()    
+        objectives = mock_evaluate_pseudopotentials()    
+        write_results(objectives)
     else:
-        write_results()
+        write_results(bad)
     
-    write_results()
-
-
-
 
 def mock_evaluate_pp():
     """ temporary until real evaluate_pp is up and running"""
     return 10, 20
 
+
 def write_results():
     pass
 
-def create_pseudopotentials(element_list):
-    """
-    loops through element list
-    for each element, makes a directory in which to create psueodpotential
-    and keep log and atompaw output
-    symlinks to pseudopotentials from main directory
-        
-    Assumes atompaw input files in start_dir, and symlinks to them.
 
-    Note that a return value of True doesn't mean 
+def create_all_pseudopotentials(element_list):
+    """
+    For each element, attempt to create pseudopotential.
+
+    Returns True if all pseudopotentials were created succesfully, 
+    False otherwise.
+    """
+    for elem in element_list:
+        try:
+            create_a_pseudopotential(elem)
+        except PseudopotentialFail:
+            return False
+    return True   
+   
+
+def create_a_pseudopotential(elem):
+    """
+    Creates a pseudopotential assuming input file is in current directory,
+    and it is named {elem}.in
+
+    The pseudopotential is generated in a named directory where all 
+    output files can be nicely stored, and then symlinked
+    to the current directory. 
+
+    raises PseudopotentialFail exception if no pseudopotential can be created.
     """
     start_dir = os.getcwd()
-    for elem in element_list:
-        atompaw_input_filename = elem+'.in'
-        dir_name = elem+'_pseudopotential'
-        os.mkdir(dir_name)
-        os.chdir(dir_name)
-        os.symlink(os.path.join(start_dir, atompaw_input_filename), atompaw_input_filename)
-        run_atompaw(atompaw_input_filename)
-        paw_name = elem+'.SOCORRO.atomicdata'
-        
-        if is_pseudopotential_converged('log') is False:
-            return False
+    atompaw_input_filename = os.path.join(start_dir, elem+'.in')
+    pseudopotential_name = elem+'.SOCORRO.atomicdata'
+
+    dir_name = elem+'_pseudopotential'
+    os.mkdir(dir_name)
+    os.chdir(dir_name)
+
+    run_atompaw(atompaw_input_filename)
+    if os.path.isfile(pseudopotential_name):
+        # if pseudopotential actually created, symlink to it
         os.chdir(start_dir)
-        os.symlink(os.path.join(dir_name, paw_name), 'PAW.'+elem)
-    return True   
-    
+        os.symlink(os.path.join(dir_name, pseudopotential_name), 'PAW.'+elem)
+    else:
+        raise PseudopotentialFail
+     
+
+class PseudopotentialFail(Exception):
+    """raised if pseudopotential creation failed with given inputs"""
+
+
 def run_atompaw(atompaw_input_filename):
     """
     runs atompaw in current directory for given input file
@@ -79,22 +98,6 @@ def run_atompaw(atompaw_input_filename):
     with open(atompaw_input_filename,'r') as input_fin, open('log', 'w') as log_fout: 
         subprocess.call(['atompaw'], stdin=input_fin, stdout=log_fout)
 
-def is_pseudopotential_converged(log_file_name):
-    """
-    check if atompaw converged by reading atompaw log file and
-    checking for non-convergence error.
-
-    Non convergence usually happens when radius is much too high or 
-    much too low in my experience. I'm not sure about other parameters.
-
-    This is version dependent, but for now I'll make it work with 
-    Atompaw v4.
-    """
-    with open(log_file_name) as fin:
-        if 'Error in EvaluateTP -- no convergence' in fin.read():
-            return False
-        else:
-            return True
 
 def preprocess_pseudopotential_input_files(element_list, template_path):
     """
