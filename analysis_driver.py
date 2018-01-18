@@ -11,6 +11,19 @@ template_path_list = [os.path.join(templates_dir, str(elem)+'.atompaw.template')
 print(template_path_list)
 
 
+# # EXAMPLE FROM DAKOTA DOCS (share/dakota/Python/dakota/interfacing/__init__.py)
+# import dakota.interfacing as di
+# # Read and parse the parameters file and construct Parameters and Results 
+# # objects
+# params, results = di.read_parameters_file("params.in", "results.out")
+# # Accessing variables
+# x1 = params["x1"]
+# x2 = params["x2"]
+# # Run a fictitious Python-based simulation and store the result in the
+# # function value of the 'f1' response.
+# results["f1"].function =  sim_results = my_simulation(x1, x2)
+# results.write()
+
 def main():
     preprocess_pseudopotential_input_files(element_list, templates_dir)
     create_successful = create_pseudopotentials()
@@ -32,30 +45,26 @@ def mock_evaluate_pp():
 def write_results():
     pass
 
-# def create_pseudopotentials(element_list):
-#     """
-#     loops through element list
-#     for each element, makes a directory in which to create psueodpotential
-#     and keep log and atompaw output
-#     symlinks to pseudopotentials from main directory
-#     """
-#     start_dir = os.getcwd()
-#     for elem in element_list:
-#         atompaw_input_filename = elem+'.in'
-#         # create directory
-#         dir_name = elem+'_pseudopotential'
-#         os.mkdir(dir_name)
-#         os.chdir(dir_name)
-#         # go to directory
-#         os.symlink(
-#         # ln -s ../$elem.in
-#         os.symlink
-#         # some sort of error handling??
-#         with open(atompaw_input_filename,'r') as input_fin, open('log', 'w') as log_fout: 
-#             subprocess.call(['atompaw'], stdin=input_fin, stdout=log_fout)
-#         os.chdir(start_dir)
-#         os.symlink(os.path.join(dir_name, paw_name), paw_name)
-
+def create_pseudopotentials(element_list):
+    """
+    loops through element list
+    for each element, makes a directory in which to create psueodpotential
+    and keep log and atompaw output
+    symlinks to pseudopotentials from main directory
+        
+    Assumes atompaw input files in start_dir, and symlinks to them.
+    """
+    start_dir = os.getcwd()
+    for elem in element_list:
+        atompaw_input_filename = elem+'.in'
+        dir_name = elem+'_pseudopotential'
+        os.mkdir(dir_name)
+        os.chdir(dir_name)
+        os.symlink(os.path.join(start_dir, atompaw_input_filename), atompaw_input_filename)
+        run_atompaw(atompaw_input_filename)
+        paw_name = elem+'.SOCORRO.atomicdata'
+        os.chdir(start_dir)
+        os.symlink(os.path.join(dir_name, paw_name), 'PAW.'+elem)
 
 def run_atompaw(atompaw_input_filename):
     """
@@ -64,6 +73,14 @@ def run_atompaw(atompaw_input_filename):
     """
     with open(atompaw_input_filename,'r') as input_fin, open('log', 'w') as log_fout: 
         subprocess.call(['atompaw'], stdin=input_fin, stdout=log_fout)
+
+def check_atompaw():
+    """
+    check if atompaw converged by reading log.
+    This is version dependent, but for now I'll make it work with 
+    Atompaw v4.
+    """
+    pass
 
 def preprocess_pseudopotential_input_files(element_list, template_path):
     """

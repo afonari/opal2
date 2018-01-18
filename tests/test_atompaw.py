@@ -7,7 +7,7 @@
 import os
 import sys
 sys.path.append('.')
-#import shutil
+import shutil
 #import numpy as np
 import tools_for_tests
 import analysis_driver
@@ -30,3 +30,39 @@ def test_run_atompaw():
         correct_file = os.path.join(test_inputs_dir, 'Si.SOCORRO.atomicdata.correct')
         with open(correct_file) as f1, open('Si.SOCORRO.atomicdata') as f2:
             assert f1.read() == f2.read()
+
+
+def test_create_pseudopotentials():
+    """
+    Run in a directory with multiple atompaw input files, builds each PAW
+    in its own directory.
+
+    Compares created PAW to a correct pseudopotential.
+
+    Assumes atompaw v4 right now. I can generalize this later if needed,
+    or just check that atompaw is called and not that the output is correct.
+    This test is fragile because output can easily change between atompaw 
+    versions.
+    """
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
+        shutil.copy(os.path.join(test_inputs_dir, 'Si.in'), os.getcwd())
+        shutil.copy(os.path.join(test_inputs_dir, 'Ge.in'), os.getcwd())
+        element_list = ['Si', 'Ge']
+        analysis_driver.create_pseudopotentials(element_list)
+        
+        Si_file_correct = os.path.join(test_inputs_dir, 'PAW.Si.correct')
+        with open(Si_file_correct) as f1, open('PAW.Si') as f2:
+            assert f1.read() == f2.read()
+        Ge_file_correct = os.path.join(test_inputs_dir, 'PAW.Ge.correct')
+        with open(Ge_file_correct) as f1, open('PAW.Ge') as f2:
+            assert f1.read() == f2.read()
+        
+    
+
+"""
+test cases:
+
+bad input (non_convergence)...need to dig through old runs for this
+sweep of different elements
+bad case of RCs? do this later (add github issue, or keep ISSUES list)
+"""
