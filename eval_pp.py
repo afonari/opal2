@@ -36,26 +36,19 @@ def main():
         os.cwd(gcut_dir_name)
         
         # return energies, forces, true/false
-        all_successful, e_list, f_list =  calculate_forces_at_gcut()
-
-        # sometimes dft runs diverge
-        if not all_successful:
-            # write artificial objective
-            write_objectives('accuracy_obj.log')
-            pass
+        try:
+            e_list, f_list =  calculate_forces_at_gcut()
+        except SocorroFail:
+            raise
           
         all_energy.append(energy_list)
         all_forces.append(forces_list)
 
-        # check if results are converged with respect to gcut
+        # If results are converged with respect to gcut,
+        # write results and exit.
         if is_converged(all_energy, all_forces):
-            calculate_final_results(dft_runs)
-            write_forces('converged_forces.dat')
-            write_objectives('accuracy_obj.log')
-            break
-    else:
-        # do stuff related to no gcut converge
-        pass
+            accu = calculate_final_results(dft_runs)
+            return accu
 
 
 class DftRun:
@@ -204,6 +197,9 @@ class DftRun:
     
         if socorro has run but didn't complete, cell energy won't be 
         printed at the end of diaryf and this will return None
+        
+        This could fail if the socorro run ouputs multiple cell
+        energies, as it does for structure relaxations.
         """
         with open(diaryf) as fin:
             for line in fin:
@@ -273,49 +269,6 @@ def position_sweep(dft_runs):
     # cases: success, wall time limit hit, socorro no converge, socorro fail
     
     
-def setup_file_structure():
-    """
-    create file structure for running dft code at given gcut, might
-    just copy from template file structure??
-    """
-    pass
-
-def print_results(energy_list, forces_list):
-    """
-    prints energy and forces (this should get called for each gcut)
-
-    energy should be N element list (N=number of positions)
-    forces should be N element list, where each element is a
-    Mx3 element numpy array (M is numnber of atoms)
-    """
-    print 'energy: ', energy_list
-    print 'forces: ', forces_list # what happens when huge number of configs/atoms?
-
-
-def write_energy_line():
-    pass
-
-
-def check_socorro_fail():
-    """
-    check for non-convergence of socorro run by reading diaryf file
-
-    previous opal would return 102s as objectives
-    """
-    #     # If socorro didn't ouptut forces or energy, it didn't complete successfully
-    # did_force=$(grep "Atomic force" diaryf)
-    # if [[ $did_force == "" ]]; then
-    #   echo fail >$2
-    #   exit
-    # fi
-    
-    # can just do this with Nones for forces and energy
-    pass
-
-
-def write_data():
-    pass
-
 
 def is_converged(energies_so_far, tol):
     """
@@ -358,8 +311,7 @@ def get_random_configurations(filename):
     """
     return np.genfromtxt(filename, comments='#') 
 
-def get_pp_path_list():
-    pass
+
 
 def calculate_forces_at_gcut():
     """
@@ -386,11 +338,14 @@ def calculate_forces_at_gcut():
         forces_list.append( dft_run.read_forces() )
 
     # print results gcut by gcut in case of wall time kill
-    print_results(energy_list, forces_list) 
+    # print_results(energy_list, forces_list) 
 
     if None in energy_list or None in forces_list:
-        all_successful = False
-    else:
-        all_successful = True
+        raise SocorroFail
 
-    return all_succesful, 0,0
+    return 0,0
+
+
+
+class SocorroFail(Exception):
+    """raised if socorro run failed with given inputs"""

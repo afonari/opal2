@@ -2,13 +2,14 @@
 #import evaluate_pp
 import os
 import subprocess
+#import dakota.interfacing as di
 
-# globals that I need to eventuallyu read from input file
-element_list = ['Si', 'Ge']
-templates_dir = 'pseudopotential_templates'
-template_path_list = [os.path.join(templates_dir, str(elem)+'.atompaw.template') 
-                      for elem in element_list]
-print(template_path_list)
+# # globals that I need to eventuallyu read from input file
+# element_list = ['Si', 'Ge']
+# templates_dir = 'pseudopotential_templates'
+# template_path_list = [os.path.join(templates_dir, str(elem)+'.atompaw.template') 
+#                       for elem in element_list]
+# print(template_path_list)
 
 
 # # EXAMPLE FROM DAKOTA DOCS (share/dakota/Python/dakota/interfacing/__init__.py)
@@ -25,22 +26,27 @@ print(template_path_list)
 # results.write()
 
 def main():
-    preprocess_pseudopotential_input_files(element_list, templates_dir)
-    is_successful = create_all_pseudopotentials()
-    if is_successful:
-        objectives = mock_evaluate_pseudopotentials()    
-        write_results(objectives)
+    # # Parse the parameters file and construct Parameters and Results objects
+    # params, results = di.read_parameters_file("params", "results")
+    x1 = params["x1"]
+    x2 = params["x2"]
+    preprocess_pseudopotential_input_files(params)
+    # preprocess_pseudopotential_input_files(element_list, templates_dir)
+    pseudopotential_success = create_all_pseudopotentials()
+    if pseudopotential_success:
+        try:
+            objectives = mock_evaluate_pseudopotentials()    
+            write_results(objectives)
+        except SocorroFail:
+            write_results(bad)
     else:
         write_results(bad)
     
 
-def mock_evaluate_pp():
-    """ temporary until real evaluate_pp is up and running"""
-    return 10, 20
-
 
 def write_results():
     pass
+
 
 
 def create_all_pseudopotentials(element_list):
@@ -57,6 +63,7 @@ def create_all_pseudopotentials(element_list):
             return False
     return True   
    
+
 
 def create_a_pseudopotential(elem):
     """
@@ -86,9 +93,6 @@ def create_a_pseudopotential(elem):
         raise PseudopotentialFail
      
 
-class PseudopotentialFail(Exception):
-    """raised if pseudopotential creation failed with given inputs"""
-
 
 def run_atompaw(atompaw_input_filename):
     """
@@ -97,6 +101,7 @@ def run_atompaw(atompaw_input_filename):
     """
     with open(atompaw_input_filename,'r') as input_fin, open('log', 'w') as log_fout: 
         subprocess.call(['atompaw'], stdin=input_fin, stdout=log_fout)
+
 
 
 def preprocess_pseudopotential_input_files(element_list, template_path):
@@ -112,6 +117,12 @@ def preprocess_pseudopotential_input_files(element_list, template_path):
         new_input_file = elem+'.in'
         subprocess.check_call(['dprepro', 'params', template_file, new_input_file])
             
+
+
+class PseudopotentialFail(Exception):
+    """raised if pseudopotential creation failed with given inputs"""
+
+
 
 if __name__=='__main__':
     main()
