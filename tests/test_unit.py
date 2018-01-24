@@ -2,6 +2,7 @@
 import sys
 sys.path.append('.')
 import os
+import pytest
 import shutil
 import eval_pp
 import wrapper_pp
@@ -118,9 +119,6 @@ def test_setup_files():
             assert f1.read() == f2.read()
 
 
-
-def test_get_forces():
-    raise Exception('implement today')
 
 def test_get_energy():
     """
@@ -240,8 +238,7 @@ def test_run_socorro_no_files():
 
 
 def test_get_random_configurations():
-    """Read random configs from file
-    """
+    """Read random configs from file"""
     positions_file = test_inputs_dir + '/configurations.in.example'
     positions = eval_pp.get_random_configurations(positions_file)
     assert (positions == [[0.00000, 0.00000, 0.00000,  0.37167, 0.50580, 0.47536],
@@ -250,15 +247,75 @@ def test_get_random_configurations():
                           [0.00000, 0.00000, 0.00000,  0.59089, 0.49233, 0.32916]]).all()
 
 
-# def test_run_socorro():
-#     """
-#     run_socorro should return true when files set up correctly
-#     
-#     Ideally I could fake the file setup?
-#     I should also mock a system call to socorro maybe, since currently
-#     it actaully calls socorro (which aborts quickly because no input
-#     files found)
-#     """
-#     testrun = eval_pp.DftRun([], [], [], [], 0) 
-#     testrun._are_files_setup = True
-#     assert testrun.run_socorro() is True
+def test_get_dft_results_at_gcut():
+    """
+    Reads energies and forces correctly frm socorro diaryf
+    files for every run at corrent gcut
+    """
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
+        # set up two mock dft runs
+        main_pp_path_list = []
+        main_argvf_template_path = ''
+        main_crystal_template_path = ''
+        pos = []
+        gcut = -1
+
+        run1 = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path, main_crystal_template_path, pos, gcut)
+        mock_run_dir_1 = 'dir_1'
+        os.mkdir(mock_run_dir_1)
+        run1.run_dir = mock_run_dir_1
+
+        run2 = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path, main_crystal_template_path, pos, gcut)
+        mock_run_dir_2 = 'dir_2'
+        os.mkdir(mock_run_dir_2)
+        run2.run_dir = mock_run_dir_2
+
+        # move mock diaryf files to run dirs
+        shutil.copy(os.path.join(test_inputs_dir, 'diaryf.test_get_dft_results_1'), 
+                    os.path.join(mock_run_dir_1, 'diaryf'))
+        shutil.copy(os.path.join(test_inputs_dir, 'diaryf.test_get_dft_results_2'), 
+                    os.path.join(mock_run_dir_2, 'diaryf'))
+
+        energy_list, forces_list = eval_pp.get_dft_results_at_gcut([run1, run2])
+        correct_energy_list = [-20000., -738.821147137]
+        correct_forces_1 = np.array([[0.1, -20.0, -0.08], 
+                                     [-1000., 0.3, 0.9]])
+        correct_forces_2 = np.array([[0.007170, -0.015092, -0.069756], 
+                                     [-0.007170, 0.015092, 0.069756]])
+        assert np.isclose(energy_list, correct_energy_list).all()
+        assert np.isclose(forces_list[0], correct_forces_1).all()
+        assert np.isclose(forces_list[1], correct_forces_2).all()
+
+
+
+def test_get_dft_results_at_gcut():
+    """
+    Reads energies and forces correctly frm socorro diaryf
+    files for every run at corrent gcut
+    """
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
+        # set up two mock dft runs
+        main_pp_path_list = []
+        main_argvf_template_path = ''
+        main_crystal_template_path = ''
+        pos = []
+        gcut = -1
+
+        run1 = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path, main_crystal_template_path, pos, gcut)
+        mock_run_dir_1 = 'dir_1'
+        os.mkdir(mock_run_dir_1)
+        run1.run_dir = mock_run_dir_1
+
+        run2 = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path, main_crystal_template_path, pos, gcut)
+        mock_run_dir_2 = 'dir_2'
+        os.mkdir(mock_run_dir_2)
+        run2.run_dir = mock_run_dir_2
+
+        # move mock diaryf files to run dirs
+        shutil.copy(os.path.join(test_inputs_dir, 'diaryf.test_get_dft_results_1'), 
+                    os.path.join(mock_run_dir_1, 'diaryf'))
+        shutil.copy(os.path.join(test_inputs_dir, 'diaryf.test_get_dft_results_none'), 
+                    os.path.join(mock_run_dir_2, 'diaryf'))
+
+        with pytest.raises(eval_pp.SocorroFail):
+            _,_ = eval_pp.get_dft_results_at_gcut([run1, run2])

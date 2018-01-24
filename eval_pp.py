@@ -258,7 +258,6 @@ def position_sweep(dft_runs):
         processes.append(p) # add p to process list
         
         os.chdir(pos_sweep_dir)
-        
     
     # wait for each process to finish
     for process in processes:
@@ -309,10 +308,13 @@ def get_random_configurations(filename):
 
 
 
-def calculate_forces_at_gcut():
+def run_dft_at_gcut():
     """
     This is essentially a wrapper around my position sweep function
     to make main() easier to read and to make testing easier.
+
+    reraises SocorroFail exception if get_dft_results_at_gcut
+    raises SocorroFail
     """
     # creates dft run object for each position
     # NEED SOME SORT OF DIRECTORY MANAGEMENT HERE
@@ -325,21 +327,38 @@ def calculate_forces_at_gcut():
     # run socorro at position in parallel
     position_sweep(position_dft_runs)
 
+    try:
+        energy_list, forces_list = get_dft_results_at_gcut(position_dft_runs) 
+        return energy_list, forces_list
+    except SocorroFail:
+        raise
+
+
+
+def get_dft_results_at_gcut(position_dft_runs): 
+    """
+    returns eneriges and forces for every dft run at this gcut
+    
+    energy_list: energy at each position run
+    forces_list: forces at each position run
+
+    Raises SocorroFail exception if any of the socorro 
+    output files did not contain energy or forces, indicating
+    socorro did not complete at that position.
+    """
     # get energy and force results from each socorro run
     energy_list = []
     forces_list = []
     for dft_run in position_dft_runs:
         # if a run did not finish, dft_run.read_*() will return None
-        energy_list.append( dft_run.read_energy() )
-        forces_list.append( dft_run.read_forces() )
-
-    # print results gcut by gcut in case of wall time kill
-    # print_results(energy_list, forces_list) 
+        diaryf_path = os.path.join(dft_run.run_dir, 'diaryf')
+        energy_list.append( dft_run.read_energy(diaryf=diaryf_path) )
+        forces_list.append( dft_run.read_forces(diaryf=diaryf_path) )
 
     if None in energy_list or None in forces_list:
         raise SocorroFail
 
-    return 0,0
+    return energy_list, forces_list
 
 
 
