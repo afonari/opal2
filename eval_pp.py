@@ -264,11 +264,7 @@ def position_sweep(dft_runs):
     for process in processes:
         process.wait()
 
-    # WHAT HAPPENS IN EVENT OF WALL TIME LIMIT
-    check_socorro_fail()
-    # cases: success, wall time limit hit, socorro no converge, socorro fail
-    
-    
+
 
 def is_converged(energies_so_far, tol):
     """
