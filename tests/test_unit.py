@@ -8,6 +8,7 @@ import eval_pp
 import wrapper_pp
 import numpy as np
 import tools_for_tests
+import calc_accuracy
 
 # directory of test input files
 test_inputs_dir = os.path.join(tools_for_tests.test_dir, 'test_inputs')
@@ -319,3 +320,61 @@ def test_get_dft_results_at_gcut():
 
         with pytest.raises(eval_pp.SocorroFail):
             _,_ = eval_pp.get_dft_results_at_gcut([run1, run2])
+
+
+def test_force_obective_bad_input_1():
+    """ arrays are different sizes """
+    a = np.random.random([4,5])
+    with pytest.raises(AssertionError):
+        calc_accuracy.force_objective(a, a)
+
+
+
+def test_force_objective_1():
+    """ force objective is 0 if forces are same """
+    a = np.array([[ 0.08415229,  0.19232031,  0.23601372,  0.56081552,  0.45148257, 0.21189699],
+           [ 0.30640275,  0.81263903,  0.55073705,  0.08709087,  0.59853359, 0.4495129 ],
+           [ 0.63485497,  0.71853685,  0.93862314,  0.85563445,  0.83501596,0.91001716]])
+    assert np.isclose(calc_accuracy.force_objective(a, a), 0.)
+
+
+
+def test_force_objective_2():
+    """ force objective is sqrt(12) if each component of each force is increased by 2 """
+    a = np.array([[ 0.08415229,  0.19232031,  0.23601372,  0.56081552,  0.45148257, 0.21189699],
+           [ 0.30640275,  0.81263903,  0.55073705,  0.08709087,  0.59853359, 0.4495129 ],
+           [ 0.63485497,  0.71853685,  0.93862314,  0.85563445,  0.83501596,0.91001716]])
+    assert np.isclose(calc_accuracy.force_objective(a, a+2), np.sqrt(12.))
+
+
+
+def test_force_objective_3():
+    """ force objective is correct with tow randomly generated arrays of forces """
+    a = np.array([[ 0.08415229,  0.19232031,  0.23601372,  0.56081552,  0.45148257, 0.21189699],
+           [ 0.30640275,  0.81263903,  0.55073705,  0.08709087,  0.59853359, 0.4495129 ],
+           [ 0.63485497,  0.71853685,  0.93862314,  0.85563445,  0.83501596,0.91001716]])
+    b = np.array([[ 0.62667619,  0.01209492,  0.82428914,  0.89583078,  0.46222994, 0.35813261],
+           [ 0.76570006,  0.89299436,  0.28740258,  0.75544941,  0.45840213, 0.72428655],
+           [ 0.38640609,  0.22099099,  0.20003252,  0.2381305 ,  0.48846362, 0.54207439]])
+    assert np.isclose(calc_accuracy.force_objective(a, b), 0.72189563681558233)
+
+
+def test_read_allelectron_forces():
+    """ read all electron forces from file """
+    filename = os.path.join(test_inputs_dir, 'allelectron_forces.dat.example')
+    ae_forces = calc_accuracy.read_allelectron_forces(filename=filename)
+    correct_forces = np.array([[-0.01755386, -0.00384146, -0.00499597,  0.01755386,  0.00384146, 0.00499597],
+                               [-0.02657325,  0.00667305, -0.15002352,  0.02657325, -0.00667305, 0.15002352],
+                               [-0.05378511,  0.00056807, -0.03796049,  0.05378511, -0.00056807, 0.03796049],
+                               [ 0.00312895, -0.00779100, -0.03520193, -0.00312895,  0.007791,   0.03520193]])
+    assert np.isclose(ae_forces, correct_forces).all()
+
+
+def test_calc_accuracy_objective():
+    allelectron_forces_file = os.path.join(test_inputs_dir, 'allelectron_forces.dat.example2')
+    f_soc = np.array([[ 0.84663309,  0.59238223,  0.37277228,  0.78836346,  0.80085703, 0.05508929],
+       [ 0.28170138,  0.14212254,  0.77006294,  0.58006615,  0.05494519, 0.88345948],
+       [ 0.80477863,  0.15893502,  0.21669501,  0.4712209 ,  0.66207443, 0.27591235],
+       [ 0.47199767,  0.03678487,  0.66060933,  0.78314128,  0.14000669, 0.82384358]])
+    obj = calc_accuracy.calc_accuracy_objective(f_soc, allelectron_forces_file)
+    assert np.isclose(obj, 0.98397061458192536)
