@@ -1,0 +1,110 @@
+#!/bin/bash
+#
+# Calculates the approximate flop count for a pwpaw run
+#
+#   flop_count_socorro diaryf
+#
+# Assumptions:
+#    - Ignoring all add/subtract operations
+#    - Assuming the full FFT grid is used instead of just the inscribed sphere
+#      The difference is roughly a factor of 2x the number of points
+#    - Ignoring multiple K-points
+#    - Ignoring the work in calculating Vxc and the atom-contered Vxc's (which are NOT trivial)
+#
+# Definitions:
+#
+# nb - Number of bands
+# ng - Size of FFT grid for wave functions and potential.  Actually it's the number of FFT points.
+# nd - Size of FFT Grid for the *density*.                              "
+# np - Total number of projectors
+# niter - Number of iterations
+#
+# rho - Density
+# V   - Potential
+# T   - Kinetic Energy 
+# psi - Wave function 
+# p_i - ith Projector
+# H   - Hamiltonian
+# O   - Overlap operator
+# r   - Residual
+#
+# Operation counts:
+#
+# T|psi> = ng
+# V|psi> = ng + 2*ng * log2(ng)
+# <p|psi> = ng
+# sum({i,j}, |p_j>c_ij<p_i|psi>) = 2*np*ng
+# H|psi> = 3*ng + 2*np*ng + 2*ng*log2(ng)
+# O|psi> = 2*np*ng
+# (H-energy*O)|psi> = 3*ng + 4*np*ng + 2*ng*log2(ng)
+# 
+#
+# Iteration Steps:
+# 
+# 0. Initial psi set provided
+#
+# 1. Calulate rho
+#    (nb+1)*nd*log2(nd)
+# 
+# 2. Calculate V (ignoring Vxc and Vxc terms in H... maybe not good idea)
+#    ng
+#
+# 3. Calculate residuals: |r_i> = (H-energy*O)|psi_i>
+#    nb * (3*ng + 4*np*ng + 2*ng*log2(ng))
+#
+# 4. Form projected H and O: H_ij=<psi_i|H|psi_j>, O_ij=<psi_i|O|psi_j>
+#    Assuming H|psi> and O|psi> is cached:
+#      8 * nb^2 * ng
+#
+# 5. Solve projected eigenproblem
+#    nb^3
+#
+# 6. Calculate occupancies - negligible cost
+#
+# 7. Project new solution back to full problem, generate new psi's
+#    2 * nb^2 * ng
+#
+# 8. Goto step 1.
+#
+#
+# Cost of single iteration:
+#  10 * nb^2 * ng + nb^3 + ng + (nb+1) * nd * log2(nd) +
+#      nb * (3*ng + 4*np*ng + 2*ng*log2(ng))
+#
+#-------------------------------------------------------------------------------------------------
+
+
+
+file=diaryf
+
+nb=$(grep "Number of bands" ${file} | cut -f2 -d= | tr -d " ")
+nkpnts=$(grep "Special k-point" ${file} | wc -l)
+np=1  # Not used now
+ng=$(grep "Plane wave cutoff energy" ${file} | tail -n 1 | cut -f2 -d= | cut -f2 -d" ")
+nd=$(grep "Plane wave cutoff energy" ${file} | head -n 1 | cut -f2 -d= | cut -f2 -d" ")
+niter=$(grep "Self-consistent step" ${file} | wc -l)
+
+echo "Number of Bands: ${nb}"
+echo "Number of K-points: ${nkpnts}"
+echo "Number of Projectors: ${np}"
+echo "Psi FFT grid points: ${ng}"
+echo "Density FFT grid points: ${nd}"
+echo "Iteration count: ${niter}"
+
+/bin/echo -n "Approximate Flop count: "
+bc -l << EOF
+nb=${nb}
+nkpnts=${nkpnts}
+np=${np}
+ng=${ng}
+nd=${nd}
+niter=${niter}
+
+define log2(x) { return(l(x)/l(2)); }
+
+flopsiter = 10 * nb^2 * ng + nb^3 + ng + (nb+1) * nd * log2(nd) + nb * (3*ng + 4*np*ng + 2*ng*log2(ng))
+nflops = niter * flopsiter
+nflops / 10^9  #Result in Gflops
+quit
+EOF
+

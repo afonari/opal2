@@ -378,3 +378,10 @@ def test_calc_accuracy_objective():
        [ 0.47199767,  0.03678487,  0.66060933,  0.78314128,  0.14000669, 0.82384358]])
     obj = calc_accuracy.calc_accuracy_objective(f_soc, allelectron_forces_file)
     assert np.isclose(obj, 0.98397061458192536)
+
+def test_calc_work_objective():
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
+        shutil.copy(os.path.join(test_inputs_dir, 'diaryf.test_calc_nflops'), 'diaryf')
+        obj = eval_pp.calc_work_objective(path_2_calc_nflops=os.path.join('..', 'calc_nflops'))
+        assert np.isclose(obj, 0.00291912152732412591)
+

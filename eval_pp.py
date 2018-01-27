@@ -35,9 +35,9 @@ def main():
         os.mkdir(gcut_dir_name)
         os.cwd(gcut_dir_name)
         
-        # return energies, forces, true/false
+        # return energies, forces
         try:
-            e_list, f_list =  calculate_forces_at_gcut()
+            e_list, f_list = run_dft_at_gcut()
         except SocorroFail:
             raise
           
@@ -47,8 +47,9 @@ def main():
         # If results are converged with respect to gcut,
         # write results and exit.
         if is_converged(all_energy, all_forces):
-            accu = calculate_final_results(dft_runs)
-            return accu
+            accu = calc_accu.calc_accuracy_objective()
+            work = calc_work_objective()
+            return [accu, work]
 
 
 class DftRun:
@@ -291,12 +292,6 @@ def is_converged(energies_so_far, tol):
     return np.isclose(energies_latest, energies_previous, atol=tol).all()
 
 
-def calculate_final_reults():
-    pass
-
-def get_converged_forces():
-    pass
-
 def get_random_configurations(filename):
     """ 
     Read random atomic configurations from file.
@@ -359,6 +354,18 @@ def get_dft_results_at_gcut(position_dft_runs):
         raise SocorroFail
 
     return energy_list, forces_list
+
+
+
+def calc_work_objective(path_2_calc_nflops=None):
+    """ 
+    I'm using an old bash script from Alan T. and Rachael H. so I'm just
+    going to subprocess it.
+    """
+    if path_2_calc_nflops is None:
+        path_2_calc_nflops = os.getcwd()
+    nflops_data = subprocess.check_output([path_2_calc_nflops])
+    return float(nflops_data.split()[-1])
 
 
 
