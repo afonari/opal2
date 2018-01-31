@@ -4,7 +4,7 @@ import sys
 import subprocess
 
 
-def main():
+def main(element_list):
     """
     code within gcut loop is structured the way it is so socorro runs
     can be run in parallel subprocesses
@@ -15,16 +15,19 @@ def main():
         all_energy[i][j][k, m] is the force for the ith gcut, jth 
         config, kth atom, and m=0,1,2 for x,y,z direction
     """
+    run_dir = os.getcwd()
+
     # these are the same for different optimizations
-    main_argvf_template_path = test_inputs_dir+'/argvf.template.example1'
-    main_crystal_template_path = test_inputs_dir+'/crystal.template.example1'
+    argvf_template_path = os.path.join(run_dir, 'argvf.template')
+    crystal_template_path = os.path.join(run_dir, 'crystal.template')
 
     # these will change for different optimizations
-    main_pp_path_list = get_pp_path_list() # read pp list from file?
-    main_positions_to_run = get_random_configurations() # read random configs from file?
+    pp_path_list = [os.path.join(run_dir, 'PAW.'+elem) for elem in element_list]
+    positions_to_run = get_random_configurations('../configurations.in') # read random configs from file
+    print positions_to_run
 
     # specify in opal.in?
-    gcuts = np.arange(10.0, 110.0, 10.0)
+    gcuts = np.arange(20.0, 50.0, 10.0)
 
     # increase gcut until converged
     # these all_ lists are needed for convergence checks
@@ -33,23 +36,27 @@ def main():
     for gcut in gcuts:
         gcut_dir_name = 'gcut_dir.' + str(int(gcut))
         os.mkdir(gcut_dir_name)
-        os.cwd(gcut_dir_name)
+        os.chdir(gcut_dir_name)
         
         # return energies, forces
         try:
-            e_list, f_list = run_dft_at_gcut()
+            e_list, f_list = run_dft_at_gcut(pp_path_list, argvf_template_path, 
+                                             crystal_template_path, positions_to_run, gcut)
         except SocorroFail:
             raise
+        print e_list, f_list
           
-        all_energy.append(energy_list)
-        all_forces.append(forces_list)
+        all_energy.append(e_list)
+        all_forces.append(f_list)
 
         # If results are converged with respect to gcut,
         # write results and exit.
-        if is_converged(all_energy, all_forces):
+        if is_converged(all_energy, 1.e-5):
             accu = calc_accu.calc_accuracy_objective()
             work = calc_work_objective()
             return [accu, work]
+
+        os.chdir(run_dir)
 
 
 class DftRun:
@@ -62,7 +69,7 @@ class DftRun:
      Assumes pseudopotential files already be named PAW.{elementsymbol}
     argvf_template_path: path to argvf template file
     crystal_template_path: path to crystal template file
-    atom_positions: some sort of list of atomic positions
+    atom_positions: Nx3 array of atomic positions where N is number of atoms
     gcut: wf energy cutoff for dft calculation
 
     important attributes
@@ -303,7 +310,7 @@ def get_random_configurations(filename):
 
 
 
-def run_dft_at_gcut():
+def run_dft_at_gcut(pp_path_list, argvf_template_path, crystal_template_path, positions, gcut):
     """
     This is essentially a wrapper around my position sweep function
     to make main() easier to read and to make testing easier.
@@ -314,10 +321,10 @@ def run_dft_at_gcut():
     # creates dft run object for each position
     # NEED SOME SORT OF DIRECTORY MANAGEMENT HERE
     position_dft_runs = []
-    for pos in main_positions_to_run:
-        position_dft_runs.append(eval_pp.DftRun(main_pp_path_list, 
-                                 main_argvf_template_path,
-                                 main_crystal_template_path, pos, gcut))
+    for pos in positions:
+        pos_reshaped = pos.reshape([-1,3])  # reshape to one row per atom
+        position_dft_runs.append(DftRun(pp_path_list, argvf_template_path,
+                                        crystal_template_path, pos_reshaped, gcut))
     
     # run socorro at position in parallel
     position_sweep(position_dft_runs)

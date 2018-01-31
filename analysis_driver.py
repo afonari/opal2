@@ -2,15 +2,8 @@
 #import evaluate_pp
 import os
 import subprocess
+import eval_pp
 #import dakota.interfacing as di
-
-# # globals that I need to eventuallyu read from input file
-# element_list = ['Si', 'Ge']
-# templates_dir = 'pseudopotential_templates'
-# template_path_list = [os.path.join(templates_dir, str(elem)+'.atompaw.template') 
-#                       for elem in element_list]
-# print(template_path_list)
-
 
 # # EXAMPLE FROM DAKOTA DOCS (share/dakota/Python/dakota/interfacing/__init__.py)
 # import dakota.interfacing as di
@@ -25,17 +18,22 @@ import subprocess
 # results["f1"].function =  sim_results = my_simulation(x1, x2)
 # results.write()
 
-def main():
-    # # Parse the parameters file and construct Parameters and Results objects
+def main(element_list, templates_dir):
+    #  I need to eventually read these from input file:
+    # element_list = ['Si', 'Ge']
+    # templates_dir = '.'
+    #template_path_list = [os.path.join(templates_dir, str(elem)+'.atompaw.template') 
+    #                       for elem in element_list]
+
+    # Parse the parameters file and construct Parameters and Results objects
     # params, results = di.read_parameters_file("params", "results")
-    x1 = params["x1"]
-    x2 = params["x2"]
-    preprocess_pseudopotential_input_files(params)
-    # preprocess_pseudopotential_input_files(element_list, templates_dir)
-    pseudopotential_success = create_all_pseudopotentials()
+    # x1 = params["x1"]
+    # x2 = params["x2"]
+    preprocess_pseudopotential_input_files(element_list, templates_dir)
+    pseudopotential_success = create_all_pseudopotentials(element_list)
     if pseudopotential_success:
         try:
-            objectives = mock_evaluate_pseudopotentials()    
+            objectives = eval_pp.main(element_list)
             write_results(objectives)
         except SocorroFail:
             write_results(bad)
@@ -72,7 +70,7 @@ def create_a_pseudopotential(elem):
 
     The pseudopotential is generated in a named directory where all 
     output files can be nicely stored, and then symlinked
-    to the current directory. 
+    to the current directory as PAW.{elem} 
 
     raises PseudopotentialFail exception if no pseudopotential can be created.
     """
@@ -107,6 +105,7 @@ def run_atompaw(atompaw_input_filename):
 def preprocess_pseudopotential_input_files(element_list, template_path):
     """
     Preprocessing for atompaw, uses Dakota's dprepro utility 
+    Writes atompaw input file called {elem}.in each element in element list.
     
     element_list: list of atomic symbols for all elements 
                   in current optimization    
