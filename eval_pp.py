@@ -302,7 +302,7 @@ def is_converged(energies_so_far, tol):
     # check all energy residuals less than tolerance
     energies_latest = energies_so_far[-1] 
     energies_previous = energies_so_far[-2]
-    return np.isclose(energies_latest, energies_previous, atol=tol).all()
+    return np.isclose(energies_latest, energies_previous, atol=tol, rtol=0).all()
 
 
 def get_random_configurations(filename):
