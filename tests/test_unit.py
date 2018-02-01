@@ -216,11 +216,21 @@ def test_is_converged_all_not_converged():
     """returns False if no energies meet convergence criterion"""    
     tol =1e-8
     e0 = [1, 1, 1, 1] # dummy
-    ek = [1.10e-7, 0.80e-7, 5.0e-7, 1.0e-8]
+    e1 = [1.10e-7, 0.80e-7, 5.0e-7, 1.0e-8]
     e2 = [2.15e-7, 1.75e-7, 6.0e-7, 3.0e-8]
     energies = [np.array(e0), np.array(e1), np.array(e2)]
     assert not eval_pp.is_converged(energies, tol)
 
+def test_is_converged_all_not_converged2():
+    """
+    returns False if energy doesn't meet convergence criterion
+    but rtol is small.
+    """    
+    tol =1e-100
+    e1 = [1.0e-7]
+    e2 = [1.0000001e-7]
+    energies = [np.array(e1), np.array(e2)]
+    assert not eval_pp.is_converged(energies, tol)
 
 def test_is_converged_all_not_converged():
     """returns false when only one gcut has run"""    
