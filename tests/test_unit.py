@@ -170,7 +170,7 @@ def test_get_forces():
         testrun = eval_pp.DftRun(pp_path_list, argvf_template_path,
                                  crystal_template_path, pos, gcut)
         forces_in = testrun.read_forces(test_inputs_dir+'/diaryf.test_get_forces')
-        correct_forces = [[0.007170, -0.015092, -0.069756], [-0.007170, 0.015092, 0.069756]]
+        correct_forces = np.array([0.007170, -0.015092, -0.069756, -0.007170, 0.015092, 0.069756])
         assert np.isclose(forces_in, correct_forces, rtol=1e-9, atol=0.0).all()
 
 
@@ -277,15 +277,15 @@ def test_get_dft_results_at_gcut():
         shutil.copy(os.path.join(test_inputs_dir, 'diaryf.test_get_dft_results_2'), 
                     os.path.join(mock_run_dir_2, 'diaryf'))
 
-        energy_list, forces_list = eval_pp.get_dft_results_at_gcut([run1, run2])
+        dft_results = eval_pp.get_dft_results_at_gcut([run1, run2])
         correct_energy_list = [-20000., -738.821147137]
         correct_forces_1 = np.array([[0.1, -20.0, -0.08], 
                                      [-1000., 0.3, 0.9]])
         correct_forces_2 = np.array([[0.007170, -0.015092, -0.069756], 
                                      [-0.007170, 0.015092, 0.069756]])
-        assert np.isclose(energy_list, correct_energy_list).all()
-        assert np.isclose(forces_list[0], correct_forces_1).all()
-        assert np.isclose(forces_list[1], correct_forces_2).all()
+        assert np.isclose(dft_results.energies, correct_energy_list).all()
+        assert np.isclose(dft_results.forces[0], correct_forces_1).all()
+        assert np.isclose(dft_results.forces[1], correct_forces_2).all()
 
 
 
@@ -332,9 +332,9 @@ def test_force_obective_bad_input_1():
 
 def test_force_objective_1():
     """ force objective is 0 if forces are same """
-    a = np.array([[ 0.08415229,  0.19232031,  0.23601372,  0.56081552,  0.45148257, 0.21189699],
-           [ 0.30640275,  0.81263903,  0.55073705,  0.08709087,  0.59853359, 0.4495129 ],
-           [ 0.63485497,  0.71853685,  0.93862314,  0.85563445,  0.83501596,0.91001716]])
+    a = np.array([[ 0.08415229,  0.19232031,  0.23601372, 0.56081552,  0.45148257, 0.21189699],
+           [ 0.30640275,  0.81263903,  0.55073705, 0.08709087,  0.59853359, 0.4495129 ],
+           [ 0.63485497,  0.71853685,  0.93862314, 0.85563445,  0.83501596, 0.91001716]])
     assert np.isclose(calc_accuracy.force_objective(a, a), 0.)
 
 
