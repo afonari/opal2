@@ -2,12 +2,19 @@ import numpy as np
 import os
 import sys
 import subprocess
+import calc_accuracy
 
 
-def main(element_list):
+def main(element_list, gcuts, energy_tol):
+    #def main(element_list):
     """
     code within gcut loop is structured the way it is so socorro runs
     can be run in parallel subprocesses
+
+    INPUTS
+    element_list: example are ['Si', 'Ge'] or ['N']
+    gcuts: list of gcuts to run to tet for energy convergence
+    energy_tol: energy at which
 
     all_energy: energy at every configuration for each gcut.
         all_energy[i][j] is the energy for the ith gcut and jth config
@@ -26,37 +33,36 @@ def main(element_list):
     positions_to_run = get_random_configurations('../configurations.in') # read random configs from file
     print positions_to_run
 
-    # specify in opal.in?
-    gcuts = np.arange(20.0, 50.0, 10.0)
-
     # increase gcut until converged
     # these all_ lists are needed for convergence checks
     all_energy = [] # will store all energies for each gcut
     all_forces = [] # will store all energies for each gcut
     for gcut in gcuts:
+        # make and move to gcut directory
         gcut_dir_name = 'gcut_dir.' + str(int(gcut))
         os.mkdir(gcut_dir_name)
         os.chdir(gcut_dir_name)
         
         # return energies, forces
         try:
-            e_list, f_list = run_dft_at_gcut(pp_path_list, argvf_template_path, 
-                                             crystal_template_path, positions_to_run, gcut)
+            dft_results = run_dft_at_gcut(pp_path_list, argvf_template_path, 
+                                          crystal_template_path, positions_to_run, gcut)
         except SocorroFail:
             raise
-        print e_list, f_list
           
-        all_energy.append(e_list)
-        all_forces.append(f_list)
+        all_energy.append(dft_results['energies'])
+        all_forces.append(dft_results['forces'])
+        print dft_results
+        os.chdir(run_dir)
 
         # If results are converged with respect to gcut,
         # write results and exit.
-        if is_converged(all_energy, 1.e-5):
-            accu = calc_accu.calc_accuracy_objective()
-            work = calc_work_objective()
+        if is_converged(all_energy, energy_tol):
+            accu = calc_accuracy.calc_accuracy_objective(dft_results['forces'], 
+                                                         os.path.join(run_dir, '..', 'allelectron_forces.dat'))
+            work = calc_work_objective(os.path.join(run_dir, '..', 'calc_nflops'))
             return [accu, work]
 
-        os.chdir(run_dir)
 
 
 class DftRun:
@@ -220,9 +226,9 @@ class DftRun:
         """
         reads forces from socorro output file
     
-        returns forces as numpy array
+        returns forces as 1 by 3N numpy array where N is the number of atoms
         """
-        forces = np.array([]).reshape(0,3) # blank np array
+        forces = np.array([]) # blank np array
         with open(diaryf) as fin:
             for line in fin:
                 if 'Atomic forces:' in line:
@@ -233,7 +239,7 @@ class DftRun:
                         if line.strip() == '':
                             break # break when blank line after forces reached
                         f = map(float, line.split()[1:4])
-                        forces = np.vstack([forces, f]) # append to froces array
+                        forces = np.append(forces, f) # append to forces array
                     return forces
             return None
 
@@ -330,8 +336,8 @@ def run_dft_at_gcut(pp_path_list, argvf_template_path, crystal_template_path, po
     position_sweep(position_dft_runs)
 
     try:
-        energy_list, forces_list = get_dft_results_at_gcut(position_dft_runs) 
-        return energy_list, forces_list
+        dft_results = get_dft_results_at_gcut(position_dft_runs) 
+        return dft_results
     except SocorroFail:
         raise
 
@@ -360,7 +366,7 @@ def get_dft_results_at_gcut(position_dft_runs):
     if None in energy_list or None in forces_list:
         raise SocorroFail
 
-    return energy_list, forces_list
+    return {'energies': energy_list, 'forces': forces_list}
 
 
 
