@@ -8,9 +8,6 @@ import calc_accuracy
 def main(element_list, gcuts, energy_tol):
     #def main(element_list):
     """
-    code within gcut loop is structured the way it is so socorro runs
-    can be run in parallel subprocesses
-
     INPUTS
     element_list: example are ['Si', 'Ge'] or ['N']
     gcuts: list of gcuts to run to tet for energy convergence
@@ -44,24 +41,39 @@ def main(element_list, gcuts, energy_tol):
         os.chdir(gcut_dir_name)
         
         # return energies, forces
+
+        # create DftRun object for each atomic structure
+        position_dft_runs = []
+        for pos in positions_to_run:
+            pos_reshaped = pos.reshape([-1,3])  # reshape to one row per atom
+            position_dft_runs.append(DftRun(pp_path_list, argvf_template_path,
+                                            crystal_template_path, pos_reshaped, gcut))
+        
+        # run socorro at positions in parallel
+        position_sweep(position_dft_runs)
+
+        # extract relevant results from socorro outputs
         try:
-            dft_results = run_dft_at_gcut(pp_path_list, argvf_template_path, 
-                                          crystal_template_path, positions_to_run, gcut)
+            dft_results = get_dft_results_at_gcut(position_dft_runs) 
+            print dft_results
         except SocorroFail:
             raise
-          
+
+        # append this gcuts results to list
         all_energy.append(dft_results['energies'])
         all_forces.append(dft_results['forces'])
-        print dft_results
         os.chdir(run_dir)
 
         # If results are converged with respect to gcut,
         # write results and exit.
         if is_converged(all_energy, energy_tol):
+            print "Converged at gcut = ", gcut
             accu = calc_accuracy.calc_accuracy_objective(dft_results['forces'], 
                                                          os.path.join(run_dir, '..', 'allelectron_forces.dat'))
-            work = calc_work_objective(os.path.join(run_dir, '..', 'calc_nflops'))
+            work = calc_work_objective(position_dft_runs, os.path.join(run_dir, '..'))
             return [accu, work]
+    else:
+        return None  # if no gcut convergence
 
 
 
@@ -316,33 +328,6 @@ def get_random_configurations(filename):
 
 
 
-def run_dft_at_gcut(pp_path_list, argvf_template_path, crystal_template_path, positions, gcut):
-    """
-    This is essentially a wrapper around my position sweep function
-    to make main() easier to read and to make testing easier.
-
-    reraises SocorroFail exception if get_dft_results_at_gcut
-    raises SocorroFail
-    """
-    # creates dft run object for each position
-    # NEED SOME SORT OF DIRECTORY MANAGEMENT HERE
-    position_dft_runs = []
-    for pos in positions:
-        pos_reshaped = pos.reshape([-1,3])  # reshape to one row per atom
-        position_dft_runs.append(DftRun(pp_path_list, argvf_template_path,
-                                        crystal_template_path, pos_reshaped, gcut))
-    
-    # run socorro at position in parallel
-    position_sweep(position_dft_runs)
-
-    try:
-        dft_results = get_dft_results_at_gcut(position_dft_runs) 
-        return dft_results
-    except SocorroFail:
-        raise
-
-
-
 def get_dft_results_at_gcut(position_dft_runs): 
     """
     returns eneriges and forces for every dft run at this gcut
@@ -370,15 +355,26 @@ def get_dft_results_at_gcut(position_dft_runs):
 
 
 
-def calc_work_objective(path_2_calc_nflops=None):
+def calc_work_objective(position_dft_runs, calc_nflops_dir=None):
     """ 
     I'm using an old bash script from Alan T. and Rachael H. so I'm just
     going to subprocess it.
+        
+    the work objective is equal to the sum of the estimated number of floating 
+    point operations for all socorro runs (there is one socorro run per atomic 
+    configuration).
     """
-    if path_2_calc_nflops is None:
-        path_2_calc_nflops = os.getcwd()
-    nflops_data = subprocess.check_output([path_2_calc_nflops])
-    return float(nflops_data.split()[-1])
+    start_dir = os.getcwd()
+    if calc_nflops_dir is None:
+        calc_nflops_dir = os.getcwd()
+    calc_nflops = os.path.join(calc_nflops_dir, 'calc_nflops')
+
+    work_objective = 0.
+    for run in position_dft_runs:
+        os.chdir(run.run_dir)
+        nflops_data = subprocess.check_output([calc_nflops])
+        work_objective += float(nflops_data.split()[-1])
+    return work_objective 
 
 
 

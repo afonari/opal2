@@ -13,12 +13,16 @@ def calc_accuracy_objective(f_soc, allelectron_forces_file):
 
 
 def force_objective(f_soc, f_allelectron):
+    """ 
+    f_soc is list of numpy arrays, where each element of list represents 
+    on atomic configuration. The numpy arrays are N by 3 where N is the number o
+    of atoms in the crystal.
+    """
     assert f_allelectron.shape[1]%3 == 0, "Each atom should have three force components."
-    
     num_configs = f_allelectron.shape[0]
     num_atoms   = (f_allelectron.shape[1])/3
-    
-    #  accuracy objective is rmsd of magnitude of difference between socorro and elk force vectors
+
+    # accuracy objective is rmsd of magnitude of difference between socorro and elk force vectors
     force_obj_unweighted = np.sqrt( np.sum((f_soc-f_allelectron)**2.)/num_configs/num_atoms )
     
     #force_obj = force_weight * force_obj_unweighted

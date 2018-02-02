@@ -390,8 +390,25 @@ def test_calc_accuracy_objective():
     assert np.isclose(obj, 0.98397061458192536)
 
 def test_calc_work_objective():
-    with tools_for_tests.TemporaryDirectory() as tmp_dir:
-        shutil.copy(os.path.join(test_inputs_dir, 'diaryf.test_calc_nflops'), 'diaryf')
-        obj = eval_pp.calc_work_objective(path_2_calc_nflops=os.path.join('..', 'calc_nflops'))
-        assert np.isclose(obj, 0.00291912152732412591)
-
+    #     with tools_for_tests.TemporaryDirectory() as tmp_dir:
+    #         shutil.copy(os.path.join(test_inputs_dir, 'diaryf.test_calc_nflops'), 'diaryf')
+    #         obj = eval_pp.calc_work_objective(path_2_calc_nflops=os.path.join('..', 'calc_nflops'))
+    #         assert np.isclose(obj, 0.00291912152732412591)
+    # 
+    #         # set up two mock dft runs
+    #         main_pp_path_list = []
+    #         main_argvf_template_path = ''
+    #         main_crystal_template_path = ''
+    #         pos = []
+    #         gcut = -1
+    # 
+    #         run1 = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path, main_crystal_template_path, pos, gcut)
+    #         mock_run_dir_1 = 'dir_1'
+    #         os.mkdir(mock_run_dir_1)
+    #         run1.run_dir = mock_run_dir_1
+    # 
+    #         run2 = eval_pp.DftRun(main_pp_path_list, main_argvf_template_path, main_crystal_template_path, pos, gcut)
+    #         mock_run_dir_2 = 'dir_2'
+    #         os.mkdir(mock_run_dir_2)
+    #         run2.run_dir = mock_run_dir_2
+    raise NotImplementedError
