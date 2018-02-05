@@ -45,8 +45,7 @@ def test_run_socorro():
 
         #assert force and energy reults
         correct_energy = -312.593586340
-        correct_forces = np.array([[0.246519, 0.247743, 0.243064],
-                                  [-0.246519, -0.247743, -0.243064]])
+        correct_forces = np.array([0.246519, 0.247743, 0.243064, -0.246519, -0.247743, -0.243064])
         assert np.isclose(testrun.read_energy(), correct_energy)
         assert np.isclose(testrun.read_forces(), correct_forces, atol=1.e-5).all()
 
@@ -95,14 +94,10 @@ def test_position_sweep():
 
         # correct results
         correct_en = [-312.593586340, -311.879456794, -312.474999793, -312.000747628]
-        correct_forces = [ np.array([[+0.246519, +0.247743, +0.243064],
-                                     [-0.246519, -0.247743, -0.243064]]),
-                           np.array([[-0.000000, -0.000000, -0.000000],
-                                     [+0.000000, +0.000000, +0.000000]]),
-                           np.array([[-0.000000, +0.000000, -0.000000],
-                                     [+0.000000, -0.000000, +0.000000]]),
-                           np.array([[+0.157293, +0.169207, -0.024752],
-                                     [-0.157293, -0.169207, +0.024752]]) ]
+        correct_forces = [ np.array([+0.246519, +0.247743, +0.243064, -0.246519, -0.247743, -0.243064]),
+                           np.array([-0.000000, -0.000000, -0.000000, +0.000000, +0.000000, +0.000000]),
+                           np.array([-0.000000, +0.000000, -0.000000, +0.000000, -0.000000, +0.000000]),
+                           np.array([+0.157293, +0.169207, -0.024752, -0.157293, -0.169207, +0.024752]) ]
 
         assert np.isclose(energies, correct_en).all()
         assert np.isclose(forces, correct_forces, atol=1.e-5).all()
