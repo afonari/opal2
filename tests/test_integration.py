@@ -121,6 +121,7 @@ def test_analysis_driver_main_Si_noconverge():
     with tools_for_tests.TemporaryDirectory() as tmp_dir:
         # set up a mock work directory:
         shutil.copy(os.path.join('..', 'calc_nflops'), os.getcwd())
+        shutil.copy(os.path.join(test_inputs_dir, 'opal.in'), 'opal.in')
         shutil.copy(os.path.join(test_inputs_dir, 'configurations.in.example'), 'configurations.in')
         shutil.copy(os.path.join(test_inputs_dir, 'allelectron_forces.dat.example'), 'allelectron_forces.dat')
         os.mkdir('workdir.example')
@@ -145,6 +146,7 @@ def test_analysis_driver_main_success():
     with tools_for_tests.TemporaryDirectory() as tmp_dir:
         # set up a mock work directory:
         shutil.copy(os.path.join('..', 'calc_nflops'), os.getcwd())
+        shutil.copy(os.path.join(test_inputs_dir, 'opal.in'), 'opal.in')
         shutil.copy(os.path.join(test_inputs_dir, 'configurations.in.example'), 'configurations.in')
         shutil.copy(os.path.join(test_inputs_dir, 'allelectron_forces.dat.example'), 'allelectron_forces.dat')
         os.mkdir('workdir.example')
@@ -158,5 +160,16 @@ def test_analysis_driver_main_success():
         # run analysis driver
         analysis_driver.main()
         with open('results') as fin:
-            assert fin.readlines()==['  7.6969368543291297E-02 accu\n', '  1.1166475392736751E-02 work\n']
-        raise NotImplementedError
+            assert fin.readlines()==['  7.6992177462473416E-02 accu\n', '  8.7573645819723784E-03 work\n']
+
+
+
+def test_analysis_driver_main_nogcut_converge():
+    """ returns proper obectives when no gcut convergence""" 
+    raise NotImplementedError
+
+
+
+def test_analysis_driver_main_nogcut_converge():
+    """ returns proper obectives when a socorro run fails""" 
+    raise NotImplementedError

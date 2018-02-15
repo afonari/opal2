@@ -19,20 +19,31 @@ import dakota.interfacing as di
 # results.write()
 
 
+
+class PseudopotentialFail(Exception):
+    """raised if pseudopotential creation failed with given inputs"""
+
+
+
 def main():
     """
-    the results and params objects are created using dakota's python interface
+    required files in run directory: 
+        ../opal.in  (contains some user settings for optimization)
+        params  (created by dakota)
+        results  (created by dakota)
+
+    the Results and Parameters objects are created using dakota's python interface
     """
-    # read user settings from input file
+    # read settings from input file
+    settings = read_inputs('../opal.in')
     element_list = settings['element_list']
     templates_dir = settings['templates_dir']
     gcuts = map(float, settings['gcuts'])
     energy_tol = float(settings['energy_tol'])
 
-    # Parse the parameters file and construct Parameters and Results objects
+    # Parse the Dakota parameters file and construct Parameters and Results objects
     params, results = di.read_parameters_file("params", "results")
-    # x1 = params["x1"]
-    # x2 = params["x2"]
+
     preprocess_pseudopotential_input_files(element_list, templates_dir)
     pseudopotential_success = create_all_pseudopotentials(element_list)
     if pseudopotential_success:
@@ -56,26 +67,6 @@ def main():
     results.write()
 
     
-def read_inputs(filename):
-    """ 
-    flimsy input file parser
-    
-    returns a dictionary of settings, where the value of each setting is a string or
-    list of strings
-    """
-    settings = {}
-    with open(filename) as fin:
-        data = fin.readlines()
-    
-    for line in data:
-        if line.rstrip() and line.lstrip()[0] != '#':  # if line isn't blank and not a comment
-            key, value = line.split()[0], line.split()[1:]
-            if len(value) == 1:
-                value = value[0]
-            settings[key] = value
-
-    return settings
-
 
 def create_all_pseudopotentials(element_list):
     """
@@ -149,12 +140,27 @@ def preprocess_pseudopotential_input_files(element_list, template_path):
             
 
 
-class PseudopotentialFail(Exception):
-    """raised if pseudopotential creation failed with given inputs"""
+def read_inputs(filename):
+    """ 
+    flimsy input file parser
+    
+    returns a dictionary of settings, where the value of each setting is a string or
+    list of strings
+    """
+    settings = {}
+    with open(filename) as fin:
+        data = fin.readlines()
+    
+    for line in data:
+        if line.rstrip() and line.lstrip()[0] != '#':  # if line isn't blank and not a comment
+            key, value = line.split()[0], line.split()[1:]
+            if len(value) == 1:
+                value = value[0]
+            settings[key] = value
+
+    return settings
 
 
 
 if __name__=='__main__':
     main()
-
-
