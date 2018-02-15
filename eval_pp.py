@@ -5,19 +5,30 @@ import subprocess
 import calc_accuracy
 
 
+class SocorroFail(Exception):
+    """raised if socorro run failed with given inputs"""
+
+class NoCutoffConvergence(Exception):
+    """raised if results don't converge with respect to cutoff"""
+
+
 def main(element_list, gcuts, energy_tol):
     #def main(element_list):
     """
     INPUTS
-    element_list: example are ['Si', 'Ge'] or ['N']
-    gcuts: list of gcuts to run to tet for energy convergence
-    energy_tol: energy at which
+        element_list: example are ['Si', 'Ge'] or ['N']
+        gcuts: list of gcuts to run to tet for energy convergence
+        energy_tol: energy at which
 
-    all_energy: energy at every configuration for each gcut.
-        all_energy[i][j] is the energy for the ith gcut and jth config
-    all_forces: forces at every configuration for each gcut.
-        all_energy[i][j][k, m] is the force for the ith gcut, jth 
-        config, kth atom, and m=0,1,2 for x,y,z direction
+    ATTRIBUTES
+        all_energy: energy at every configuration for each gcut.
+            all_energy[i][j] is the energy for the ith gcut and jth config
+        all_forces: forces at every configuration for each gcut.
+            all_energy[i][j][k, m] is the force for the ith gcut, jth 
+            config, kth atom, and m=0,1,2 for x,y,z direction
+    
+    RETURNS:
+        objectives: 
     """
     run_dir = os.getcwd()
 
@@ -71,9 +82,9 @@ def main(element_list, gcuts, energy_tol):
             accu = calc_accuracy.calc_accuracy_objective(dft_results['forces'], 
                                                          os.path.join(run_dir, '..', 'allelectron_forces.dat'))
             work = calc_work_objective(position_dft_runs, os.path.join(run_dir, '..'))
-            return [accu, work]
+            return {'accu': accu, 'work': work}
     else:
-        return None  # if no gcut convergence
+        raise NoCutoffConvergence  # if no gcut convergence
 
 
 
@@ -377,6 +388,3 @@ def calc_work_objective(position_dft_runs, calc_nflops_dir=None):
     return work_objective 
 
 
-
-class SocorroFail(Exception):
-    """raised if socorro run failed with given inputs"""

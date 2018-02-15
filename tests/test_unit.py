@@ -1,14 +1,15 @@
 #!/usr/bin/env python
-import sys
-sys.path.append('.')
+import numpy as np
 import os
 import pytest
 import shutil
-import eval_pp
-import wrapper_pp
-import numpy as np
-import tools_for_tests
+import sys
+sys.path.append('.')
+import analysis_driver
 import calc_accuracy
+import eval_pp
+import tools_for_tests
+import wrapper_pp
 
 # directory of test input files
 test_inputs_dir = os.path.join(tools_for_tests.test_dir, 'test_inputs')
@@ -412,3 +413,10 @@ def test_calc_work_objective():
     #         os.mkdir(mock_run_dir_2)
     #         run2.run_dir = mock_run_dir_2
     raise NotImplementedError
+
+def test_read_inputs():
+    filename = os.path.join(test_inputs_dir, 'opal.in')
+    settings = analysis_driver.read_inputs(filename)
+    assert settings['fake_setting_int'] == '4'
+    assert settings['fake_setting_list'] == ['a', 'bc', 'd']
+    assert settings['fake_setting_float'] == '4.1'

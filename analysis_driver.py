@@ -3,7 +3,7 @@
 import os
 import subprocess
 import eval_pp
-#import dakota.interfacing as di
+import dakota.interfacing as di
 
 # # EXAMPLE FROM DAKOTA DOCS (share/dakota/Python/dakota/interfacing/__init__.py)
 # import dakota.interfacing as di
@@ -18,33 +18,63 @@ import eval_pp
 # results["f1"].function =  sim_results = my_simulation(x1, x2)
 # results.write()
 
-def main(element_list, templates_dir):
-    #  I need to eventually read these from input file:
-    # element_list = ['Si', 'Ge']
-    # templates_dir = '.'
-    #template_path_list = [os.path.join(templates_dir, str(elem)+'.atompaw.template') 
-    #                       for elem in element_list]
+
+def main():
+    """
+    the results and params objects are created using dakota's python interface
+    """
+    # read user settings from input file
+    element_list = settings['element_list']
+    templates_dir = settings['templates_dir']
+    gcuts = map(float, settings['gcuts'])
+    energy_tol = float(settings['energy_tol'])
 
     # Parse the parameters file and construct Parameters and Results objects
-    # params, results = di.read_parameters_file("params", "results")
+    params, results = di.read_parameters_file("params", "results")
     # x1 = params["x1"]
     # x2 = params["x2"]
     preprocess_pseudopotential_input_files(element_list, templates_dir)
     pseudopotential_success = create_all_pseudopotentials(element_list)
     if pseudopotential_success:
         try:
-            objectives = eval_pp.main(element_list)
-            write_results(objectives)
-        except SocorroFail:
-            write_results(bad)
+            objectives = eval_pp.main(element_list, gcuts, energy_tol)
+            results['accu'].function = objectives['accu']
+            results['work'].function = objectives['work']
+        except eval_pp.SocorroFail:
+            # if a socorro run fails
+            results['accu'].function = 102
+            results['work'].function = 102
+        except eval_pp.NoCutoffConvergence:
+            # if the results don't converge with respect to plane wave cutoff
+            results['accu'].function = 95
+            results['work'].function = 95
     else:
-        write_results(bad)
+        # if pseudopotential creation unsuccessful
+        results['accu'].function = 100
+        results['work'].function = 100
+
+    results.write()
+
     
+def read_inputs(filename):
+    """ 
+    flimsy input file parser
+    
+    returns a dictionary of settings, where the value of each setting is a string or
+    list of strings
+    """
+    settings = {}
+    with open(filename) as fin:
+        data = fin.readlines()
+    
+    for line in data:
+        if line.rstrip() and line.lstrip()[0] != '#':  # if line isn't blank and not a comment
+            key, value = line.split()[0], line.split()[1:]
+            if len(value) == 1:
+                value = value[0]
+            settings[key] = value
 
-
-def write_results():
-    pass
-
+    return settings
 
 
 def create_all_pseudopotentials(element_list):
@@ -88,6 +118,7 @@ def create_a_pseudopotential(elem):
         os.chdir(start_dir)
         os.symlink(os.path.join(dir_name, pseudopotential_name), 'PAW.'+elem)
     else:
+        os.chdir(start_dir)
         raise PseudopotentialFail
      
 

@@ -1,0 +1,6 @@
+# I am a comment
+fake_setting_int  4
+ fake_setting_list  a  bc  d
+  # I am a a comment too. Below is a blank line
+
+fake_setting_float  4.1
