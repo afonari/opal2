@@ -1,0 +1,15 @@
+                                          4 variables
+                      1.000000000000000e-01 DAKOTA_Si_RC
+                      1.000000000000000e+00 DAKOTA_Si_EP
+                      1.619836432868538e+00 DAKOTA_Ge_RC
+                      4.137989938789043e+00 DAKOTA_Ge_ED
+                                          2 functions
+                                          1 ASV_1:accu
+                                          1 ASV_2:work
+                                          4 derivative_variables
+                                          1 DVV_1:DAKOTA_Si_RC
+                                          2 DVV_2:DAKOTA_Si_EP
+                                          3 DVV_3:DAKOTA_Ge_RC
+                                          4 DVV_4:DAKOTA_Ge_ED
+                                          0 analysis_components
+                                         12 eval_id

@@ -1,0 +1,32 @@
+kgroups 1
+
+atomic_representation  paw
+
+xctype_dependence density
+xctype_ddf_source native
+
+xctype_functional pbe
+xctype_correlation pw
+
+wf_cutoff   {gcut}
+den_cutoff  {4gcut}
+
+config_type        self-consistent
+config_steps       10000000
+config_convergence energy
+energy_tolerance   1.0d-8
+
+nbands    17
+
+kpoints   gmp
+mpparams  4 4 4 
+
+kt        5.0d-3
+
+solver_method   bd
+solver_dir      3
+solver_tol      1.0d-4
+
+forces on
+
+write_band_occupations

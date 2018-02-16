@@ -1,0 +1,30 @@
+Ge 32
+GGA-PBE scalarrelativistic loggrid 2001
+4 4 3 0 0 0 
+4 1 2 
+0 0 0 
+c
+c
+v
+v
+c
+v
+v
+v
+2
+{DAKOTA_Ge_RC}
+n
+n
+y
+{DAKOTA_Ge_ED}
+n 
+VANDERBILT   
+3 0
+{DAKOTA_Ge_RC}
+{DAKOTA_Ge_RC}
+{DAKOTA_Ge_RC}
+{DAKOTA_Ge_RC}
+{DAKOTA_Ge_RC}
+{DAKOTA_Ge_RC}
+SOCORROOUT
+0

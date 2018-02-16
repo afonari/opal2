@@ -1,0 +1,24 @@
+# Number of configurations: 4
+# Minimum distance between atoms: 0.692820323028
+# Perturbation range (lattice coordinates): -0.5 to 0.5
+# Lattice vectors (unscaled):
+# 1.0 1.0 0.0
+# 0.0 1.0 1.0
+# 1.0 0.0 1.0
+#
+# Lattice vector scale: 1.0
+# Number of atoms in unit cell: 2
+# Number of fixed atoms: 1
+# Number of free atoms: 1
+#
+# Position of fixed atoms, if any (lattice coordinates):
+# 0.0 0.0 0.0
+#
+# Equilibrium positions of free atoms (lattice coordinates):
+# 0.5 0.5 0.5
+#
+# Generated configurations:
+0.00000 0.00000 0.00000       0.37167 0.50580 0.47536
+0.00000 0.00000 0.00000       0.74019 0.24042 0.44835
+0.00000 0.00000 0.00000       0.49723 0.50676 0.22171
+0.00000 0.00000 0.00000       0.59089 0.49233 0.32916

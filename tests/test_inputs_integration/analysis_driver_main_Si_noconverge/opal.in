@@ -1,0 +1,4 @@
+element_list    Si Ge
+templates_dir   .
+gcuts           20 30 40 50 60 70
+energy_tol      3.e-3
