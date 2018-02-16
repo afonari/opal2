@@ -290,17 +290,15 @@ def test_get_dft_results_at_gcut():
 
         dft_results = eval_pp.get_dft_results_at_gcut([run1, run2])
         correct_energy_list = [-20000., -738.821147137]
-        correct_forces_1 = np.array([[0.1, -20.0, -0.08], 
-                                     [-1000., 0.3, 0.9]])
-        correct_forces_2 = np.array([[0.007170, -0.015092, -0.069756], 
-                                     [-0.007170, 0.015092, 0.069756]])
-        assert np.isclose(dft_results.energies, correct_energy_list).all()
-        assert np.isclose(dft_results.forces[0], correct_forces_1).all()
-        assert np.isclose(dft_results.forces[1], correct_forces_2).all()
+        correct_forces_1 = np.array([0.1, -20.0, -0.08, -1000., 0.3, 0.9])
+        correct_forces_2 = np.array([0.007170, -0.015092, -0.069756, -0.007170, 0.015092, 0.069756])
+        assert np.isclose(dft_results['energies'], correct_energy_list).all()
+        assert np.isclose(dft_results['forces'][0], correct_forces_1).all()
+        assert np.isclose(dft_results['forces'][1], correct_forces_2).all()
 
 
 
-def test_get_dft_results_at_gcut():
+def test_get_dft_results_at_gcut_socorrofail():
     """
     Reads energies and forces correctly frm socorro diaryf
     files for every run at corrent gcut
