@@ -92,12 +92,15 @@ def test_position_sweep():
             forces.append( run.read_forces() )
             os.chdir(tmp_dir)
 
+        print energies
+        print forces
+
         # correct results
-        correct_en = [-312.593586340, -311.879456794, -312.474999793, -312.000747628]
-        correct_forces = [ np.array([+0.246519, +0.247743, +0.243064, -0.246519, -0.247743, -0.243064]),
-                           np.array([-0.000000, -0.000000, -0.000000, +0.000000, +0.000000, +0.000000]),
-                           np.array([-0.000000, +0.000000, -0.000000, +0.000000, -0.000000, +0.000000]),
-                           np.array([+0.157293, +0.169207, -0.024752, -0.157293, -0.169207, +0.024752]) ]
+        correct_en = [-315.52682125, -314.613501131, -315.33638574, -314.797573776]
+        correct_forces = [ np.array([ 0.337666,  0.218549,  0.321221, -0.337666, -0.218549, -0.321221]), 
+                           np.array([ 0., -0., -0., -0.,  0.,  0.]), 
+                           np.array([-0.,  0., -0.,  0.,  0.,  0.]), 
+                           np.array([ 0.29504 ,  0.341381,  0.008144, -0.29504 , -0.341381, -0.008144])]
 
         assert np.isclose(energies, correct_en).all()
         assert np.isclose(forces, correct_forces, atol=1.e-5).all()
