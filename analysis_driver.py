@@ -120,7 +120,7 @@ def run_atompaw(atompaw_input_filename):
     currently assumes atompaw4
     """
     with open(atompaw_input_filename,'r') as input_fin, open('log', 'w') as log_fout: 
-        subprocess.call(['atompaw'], stdin=input_fin, stdout=log_fout)
+        subprocess.call(['srun', '-n', '1', 'atompaw'], stdin=input_fin, stdout=log_fout)
 
 
 

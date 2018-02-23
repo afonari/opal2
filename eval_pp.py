@@ -2,7 +2,9 @@ import numpy as np
 import os
 import sys
 import subprocess
+import multiprocessing
 import calc_accuracy
+import dakota.interfacing.parallel as di
 
 
 class SocorroFail(Exception):
@@ -51,8 +53,6 @@ def main(element_list, gcuts, energy_tol):
         os.mkdir(gcut_dir_name)
         os.chdir(gcut_dir_name)
         
-        # return energies, forces
-
         # create DftRun object for each atomic structure
         position_dft_runs = []
         for pos in positions_to_run:
@@ -61,7 +61,9 @@ def main(element_list, gcuts, energy_tol):
                                             crystal_template_path, pos_reshaped, gcut))
         
         # run socorro at positions in parallel
+        print "stop 1"
         position_sweep(position_dft_runs)
+        print "stop 2"
 
         # extract relevant results from socorro outputs
         try:
@@ -127,31 +129,31 @@ class DftRun:
         self._are_files_setup = False
         self.run_dir = None
 
-    def run_socorro(self, logfile):
-        """
-        runs socorro in a subprocess, reurns process ID, and continues
+    # def run_socorro(self, logfile):
+    #     """
+    #     runs socorro in a subprocess, reurns process ID, and continues
 
-        if files haven't been set up:
-            return False after printing warning
-        if socorro runs and finishes successfully:
-            return process ID from Popen
+    #     if files haven't been set up:
+    #         return False after printing warning
+    #     if socorro runs and finishes successfully:
+    #         return process ID from Popen
 
-        log_file: file handle for logging soccoro stdout/err output
-        """
-        if self._are_files_setup is False:
-            # wnat exit so jobs don't keep running
-            print 'Files not setup yet. Must run setup_files() first'
-            return False
-        else:
-            p = subprocess.Popen('socorro', stdout=logfile, stderr=logfile)
-            return p # return process id for wait later
+    #     log_file: file handle for logging soccoro stdout/err output
+    #     """
+    #     if self._are_files_setup is False:
+    #         # wnat exit so jobs don't keep running
+    #         print 'Files not setup yet. Must run setup_files() first'
+    #         return False
+    #     else:
+    #         p = subprocess.Popen('socorro', stdout=logfile, stderr=logfile)
+    #         return p # return process id for wait later
    
     def setup_files(self):
         """
         write dft input files from templates 
 
         note this will probably fail if argvf, data/, or data/crystal
-        already exist. This may be desirable behavior but if not I can
+        alread exist. This may be desirable behavior but if not I can
         change it.
         """
         self._make_argvf()
@@ -272,12 +274,6 @@ def position_sweep(dft_runs):
     """
     run several instances of socorro on different threads using
     different positions
-    
-    when all socorro runs are done, returns dft_run objects
-
-    main_ variables are defined globally or in the calling function
-
-    still untested
     """
     pos_sweep_dir = os.getcwd()
     print 'Calling Dakota position sweep in ' + pos_sweep_dir
@@ -290,17 +286,25 @@ def position_sweep(dft_runs):
         os.chdir(this_dir)
 
         dft_run.setup_files()
-        with open('socorro.log', 'w') as fout:
-            p = dft_run.run_socorro(fout)
+
+        # start the tiler on its own process and run socorro
+        # without multiprocess, the socorro runs are serial
+        p = multiprocessing.Process(target=di.tile_run_dynamic, kwargs={"commands" : [(1, ["--bind-to", "none", "socorro"])]})
+        p.start()
         processes.append(p) # add p to process list
         
         os.chdir(pos_sweep_dir)
     
     # wait for each process to finish
     for process in processes:
-        process.wait()
+        print process
+        process.join()
 
-
+# def call_socorro():
+#     with open('socorro.log', 'w') as fout:
+#         # p = dft_run.run_socorro(fout)
+#         returncode = di.tile_run_dynamic(commands=[(16, ["--bind-to", "none", "-output-filename", "log", "socorro"])])
+#     return returncode
 
 def is_converged(energies_so_far, tol):
     """
