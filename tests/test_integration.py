@@ -122,5 +122,26 @@ def test_analysis_driver_main_success():
 
 
 def test_analysis_driver_main_nogcut_converge():
-    """ returns proper obectives when no gcut convergence""" 
-    raise NotImplementedError
+    """ 
+    returns proper obectives of 95 when no gcut convergence
+    sets impossible energy tolerance in opal.in
+    """ 
+    test_inputs_dir = os.path.join(main_test_inputs_dir, 'analysis_driver_main_nogcut_converge')
+    with tools_for_tests.TemporaryDirectory() as tmp_dir:
+        # set up a mock work directory:
+        shutil.copy(os.path.join('..', 'calc_nflops'), os.getcwd())
+        shutil.copy(os.path.join(test_inputs_dir, 'opal.in'), 'opal.in')
+        shutil.copy(os.path.join(test_inputs_dir, 'configurations.in.example'), 'configurations.in')
+        shutil.copy(os.path.join(test_inputs_dir, 'allelectron_forces.dat.example'), 'allelectron_forces.dat')
+        os.mkdir('workdir.example')
+        os.chdir('workdir.example')
+        shutil.copy(os.path.join(test_inputs_dir, 'argvf.template'), 'argvf.template')
+        shutil.copy(os.path.join(test_inputs_dir, 'crystal.template'), 'crystal.template')
+        shutil.copy(os.path.join(test_inputs_dir, 'Si.in.template'), os.getcwd())
+        shutil.copy(os.path.join(test_inputs_dir, 'Ge.in.template'), os.getcwd())
+        shutil.copy(os.path.join(test_inputs_dir, 'params'), os.getcwd())
+
+        # run analysis driver
+        analysis_driver.main()
+        with open('results') as fin:
+            assert fin.readlines()==['  9.5000000000000000E+01 accu\n', '  9.5000000000000000E+01 work\n']
