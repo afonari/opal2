@@ -61,9 +61,7 @@ def main(element_list, gcuts, energy_tol):
                                             crystal_template_path, pos_reshaped, gcut))
         
         # run socorro at positions in parallel
-        print "stop 1"
         position_sweep(position_dft_runs)
-        print "stop 2"
 
         # extract relevant results from socorro outputs
         try:
@@ -75,6 +73,7 @@ def main(element_list, gcuts, energy_tol):
         # append this gcuts results to list
         all_energy.append(dft_results['energies'])
         all_forces.append(dft_results['forces'])
+
         os.chdir(run_dir)
 
         # If results are converged with respect to gcut,
@@ -389,6 +388,7 @@ def calc_work_objective(position_dft_runs, calc_nflops_dir=None):
         os.chdir(run.run_dir)
         nflops_data = subprocess.check_output([calc_nflops])
         work_objective += float(nflops_data.split()[-1])
+    os.chdir(start_dir)
     return work_objective 
 
 
