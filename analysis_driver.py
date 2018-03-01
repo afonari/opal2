@@ -3,7 +3,8 @@
 import os
 import subprocess
 import eval_pp
-import dakota.interfacing as di
+import sys
+import dakota_interfacing_2.interfacing.parallel as di
 
 # # EXAMPLE FROM DAKOTA DOCS (share/dakota/Python/dakota/interfacing/__init__.py)
 # import dakota.interfacing as di
@@ -34,37 +35,39 @@ def main():
 
     the Results and Parameters objects are created using dakota's python interface
     """
-    # read settings from input file
-    settings = read_inputs('../opal.in')
-    element_list = settings['element_list']
-    templates_dir = settings['templates_dir']
-    gcuts = map(float, settings['gcuts'])
-    energy_tol = float(settings['energy_tol'])
+    with open('analysis_driver.log', 'w') as ad_log:
+        sys.stdout = ad_log
+        # read settings from input file
+        settings = read_inputs('../opal.in')
+        element_list = settings['element_list']
+        templates_dir = settings['templates_dir']
+        gcuts = map(float, settings['gcuts'])
+        energy_tol = float(settings['energy_tol'])
 
-    # Parse the Dakota parameters file and construct Parameters and Results objects
-    params, results = di.read_parameters_file("params", "results")
+        # Parse the Dakota parameters file and construct Parameters and Results objects
+        params, results = di.read_parameters_file("params", "results")
 
-    preprocess_pseudopotential_input_files(element_list, templates_dir)
-    pseudopotential_success = create_all_pseudopotentials(element_list)
-    if pseudopotential_success:
-        try:
-            objectives = eval_pp.main(element_list, gcuts, energy_tol)
-            results['accu'].function = objectives['accu']
-            results['work'].function = objectives['work']
-        except eval_pp.SocorroFail:
-            # if a socorro run fails
-            results['accu'].function = 102
-            results['work'].function = 102
-        except eval_pp.NoCutoffConvergence:
-            # if the results don't converge with respect to plane wave cutoff
-            results['accu'].function = 95
-            results['work'].function = 95
-    else:
-        # if pseudopotential creation unsuccessful
-        results['accu'].function = 100
-        results['work'].function = 100
+        preprocess_pseudopotential_input_files(element_list, templates_dir)
+        pseudopotential_success = create_all_pseudopotentials(element_list)
+        if pseudopotential_success:
+            try:
+                objectives = eval_pp.main(element_list, gcuts, energy_tol)
+                results['accu'].function = objectives['accu']
+                results['work'].function = objectives['work']
+            except eval_pp.SocorroFail:
+                # if a socorro run fails
+                results['accu'].function = 102
+                results['work'].function = 102
+            except eval_pp.NoCutoffConvergence:
+                # if the results don't converge with respect to plane wave cutoff
+                results['accu'].function = 95
+                results['work'].function = 95
+        else:
+            # if pseudopotential creation unsuccessful
+            results['accu'].function = 100
+            results['work'].function = 100
 
-    results.write()
+        results.write()
 
     
 
@@ -120,7 +123,10 @@ def run_atompaw(atompaw_input_filename):
     currently assumes atompaw4
     """
     with open(atompaw_input_filename,'r') as input_fin, open('log', 'w') as log_fout: 
-        subprocess.call(['srun', '-n', '1', 'atompaw'], stdin=input_fin, stdout=log_fout)
+        # subprocess.call(['atompaw'], stdin=input_fin, stdout=log_fout)
+        # subprocess.call(['srun', '-n', '1', 'atompaw'], stdin=input_fin, stdout=log_fout)
+        di.tile_run_dynamic(commands=[(4, ["-np", "1", "--bind-to", "none", "atompaw"])], 
+                            dedicated_master=0, stdin=input_fin, stdout=log_fout)
 
 
 

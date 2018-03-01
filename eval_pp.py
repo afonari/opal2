@@ -4,7 +4,7 @@ import sys
 import subprocess
 import multiprocessing
 import calc_accuracy
-import dakota.interfacing.parallel as di
+import dakota_interfacing_2.interfacing.parallel as di
 
 
 class SocorroFail(Exception):
@@ -83,6 +83,7 @@ def main(element_list, gcuts, energy_tol):
             accu = calc_accuracy.calc_accuracy_objective(dft_results['forces'], 
                                                          os.path.join(run_dir, '..', 'allelectron_forces.dat'))
             work = calc_work_objective(position_dft_runs, os.path.join(run_dir, '..'))
+            print 'returning obectives. current dir is: ', run_dir
             return {'accu': accu, 'work': work}
     else:
         raise NoCutoffConvergence  # if no gcut convergence
@@ -288,16 +289,20 @@ def position_sweep(dft_runs):
 
         # start the tiler on its own process and run socorro
         # without multiprocess, the socorro runs are serial
-        p = multiprocessing.Process(target=di.tile_run_dynamic, kwargs={"commands" : [(1, ["--bind-to", "none", "socorro"])]})
-        p.start()
+        with open('socorro.out', 'w') as logfile:
+            p = multiprocessing.Process(target=di.tile_run_dynamic, 
+                                        kwargs={"commands" : [(1, ["--bind-to", "none", "socorro"])],
+                                        "dedicated_master" : 0, "stdout" : logfile, "stderr" : logfile})
+            p.start()
+            # p = subprocess.Popen('socorro', stdout=logfile, stderr=logfile)
         processes.append(p) # add p to process list
         
         os.chdir(pos_sweep_dir)
     
     # wait for each process to finish
     for process in processes:
-        print process
         process.join()
+        #process.wait()
 
 # def call_socorro():
 #     with open('socorro.log', 'w') as fout:
