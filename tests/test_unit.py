@@ -9,7 +9,6 @@ import analysis_driver
 import calc_accuracy
 import eval_pp
 import tools_for_tests
-import wrapper_pp
 
 # directory of test input files
 test_inputs_dir = os.path.join(tools_for_tests.test_dir, 'test_inputs')
@@ -20,15 +19,6 @@ def isclose(a, b, rel_tol=1e-9, abs_tol=0.0):
     """
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
-def test_write_results(tmpdir):
-    """ writes objectives of 100, 100 to file, checks output """
-    wrapper_pp.write_results_file({'accu': 100, 'work': 101})
-    with open('results') as f:
-        results_output = f.readlines()
-    os.remove('results')
-    assert map(str.strip, results_output) == ['100 accu_obj', '101 work_obj']
-
-
 def test_preproc_argvf():
     """ make sure {gcut} and {4gcut} are replaced in text correctly """
     gcut = 40.
@@ -38,7 +28,6 @@ def test_preproc_argvf():
         tmplt_txt = fin.readlines()
     assert testrun._preproc_argvf(tmplt_txt) == ['asdfsd\n', 
      'asdf 40.0\n', 'asdfas 160.0\n', '\n', '\n', 'lkjlj\n']
-
 
 def test_preproc_crystal():
     """ check crystal coordinates placed in text correctly 
