@@ -121,11 +121,14 @@ def run_atompaw(atompaw_input_filename):
     """
     runs atompaw in current directory for given input file
     currently assumes atompaw4
+
+    For tile_run_dynamic, the first argument should be the tile size
+    determined by the socorro runs, while np should always be 1.
     """
     with open(atompaw_input_filename,'r') as input_fin, open('log', 'w') as log_fout: 
         # subprocess.call(['atompaw'], stdin=input_fin, stdout=log_fout)
         # subprocess.call(['srun', '-n', '1', 'atompaw'], stdin=input_fin, stdout=log_fout)
-        di.tile_run_dynamic(commands=[(4, ["-np", "1", "--bind-to", "none", "atompaw"])], 
+        di.tile_run_dynamic(commands=[(1, ["-np", "1", "--bind-to", "none", "atompaw"])], 
                             dedicated_master=0, stdin=input_fin, stdout=log_fout)
 
 
