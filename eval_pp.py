@@ -83,7 +83,6 @@ def main(element_list, gcuts, energy_tol):
             accu = calc_accuracy.calc_accuracy_objective(dft_results['forces'], 
                                                          os.path.join(run_dir, '..', 'allelectron_forces.dat'))
             work = calc_work_objective(position_dft_runs, os.path.join(run_dir, '..'))
-            print 'returning obectives. current dir is: ', run_dir
             return {'accu': accu, 'work': work}
     else:
         raise NoCutoffConvergence  # if no gcut convergence
@@ -276,7 +275,7 @@ def position_sweep(dft_runs):
     different positions
     """
     pos_sweep_dir = os.getcwd()
-    print 'Calling Dakota position sweep in ' + pos_sweep_dir
+    print 'Calling position sweep in ' + pos_sweep_dir
 
     # for each dft run, set up files and start socorro subprocess
     processes = []
@@ -367,7 +366,8 @@ def get_dft_results_at_gcut(position_dft_runs):
         energy_list.append( dft_run.read_energy(diaryf=diaryf_path) )
         forces_list.append( dft_run.read_forces(diaryf=diaryf_path) )
 
-    if None in energy_list or None in forces_list:
+    # check for Nones in energies and forces
+    if None in energy_list or True in [x is None for x in forces_list]:
         raise SocorroFail
 
     return {'energies': energy_list, 'forces': forces_list}
